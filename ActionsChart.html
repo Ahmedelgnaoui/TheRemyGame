@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>IRL XP – Confidence / Depth / Overall Tracks</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #050816;
+      --panel: #0b1020;
+      --accent: #ffb547;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --border: #1f2933;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .shell { max-width: 1180px; margin: 0 auto; }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      letter-spacing: 0.04em;
+      margin: 0;
+    }
+
+    header .subtitle {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, #111827, #020617 60%);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      padding: 16px 18px 18px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      margin: 0 0 8px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .card p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin: 0 0 10px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      font-size: 0.82rem;
+      background: #020617;
+      color: var(--text);
+      outline: none;
+    }
+    textarea::placeholder { color: #4b5563; }
+
+    button {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, #f97316, #eab308);
+      color: #111827;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.15s ease;
+    }
+    button:hover {
+      filter: brightness(1.05);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.7);
+      transform: translateY(-1px);
+    }
+    button:active {
+      transform: translateY(1px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mode-buttons {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn {
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      box-shadow: none;
+      background: #020617;
+      color: var(--muted);
+      border: 1px solid #111827;
+      text-transform: none;
+      letter-spacing: 0.03em;
+    }
+    .mode-btn.active {
+      background: linear-gradient(135deg, #f97316, #eab308);
+      color: #111827;
+      border-color: transparent;
+    }
+
+    .status {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      white-space: pre-wrap;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      width: 100%;
+      min-height: 380px;
+    }
+
+    .legend {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.78rem;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: #020617;
+      border: 1px solid #111827;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s ease, border-color 0.15s ease,
+        opacity 0.15s ease, transform 0.1s ease;
+    }
+    .legend span:hover {
+      transform: translateY(-1px);
+      border-color: #4b5563;
+    }
+    .legend span.inactive {
+      opacity: 0.35;
+      border-color: #374151;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <h1>The Remy — Actions Chart</h1>
+        <div class="subtitle">
+          Paste your <strong>Export Activity Log</strong> and see how
+          <strong>Confidence XP</strong>, <strong>Depth XP</strong>, and
+          <strong>Overall XP</strong> evolve — by actions or by days.
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- LEFT: Chart -->
+      <section class="card">
+        <div class="btn-row">
+          <h2>XP Over Time</h2>
+          <div class="mode-buttons">
+            <button id="modeActions" class="mode-btn active">By Actions</button>
+            <button id="modeDays" class="mode-btn">By Days</button>
+          </div>
+        </div>
+        <p>
+          <span id="modeHint">
+            X-axis = action number • Y-axis = total XP.
+          </span>
+        </p>
+        <div class="chart-wrapper">
+          <canvas id="xpChart"></canvas>
+        </div>
+        <div class="legend" id="legend"></div>
+      </section>
+
+      <!-- RIGHT: Import -->
+      <section class="card">
+        <h2>Import Activity Log</h2>
+        <p>
+          From the main game, click <strong>Copy Export</strong>, paste it here,
+          then hit <strong>Generate Tracks</strong>.
+        </p>
+        <textarea
+          id="logInput"
+          placeholder="Example formats the parser understands:
+2025-11-11 23:59:22 — empathy +5 — checked on sister’s wellbeing
+2025-11-11 10:04:04|vitality|1|stretched my legs"
+        ></textarea>
+        <button id="parseButton">Generate Tracks</button>
+        <div class="status" id="status"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // --- Domains & split must match your main app ---
+    const DOMAINS = [
+      "respect","wisdom","vitality","wealth","empathy",
+      "focus","discipline","inspiration","bravery","harmony"
+    ];
+
+    const CONFIDENCE_DOMAIN_KEYS = [
+      "respect","vitality","wealth","discipline","bravery"
+    ];
+    const DEPTH_DOMAIN_KEYS = [
+      "wisdom","empathy","focus","inspiration","harmony"
+    ];
+
+    // Three tracks
+    const TRACKS = [
+      { key: "confidence", label: "Confidence XP", color: "#f97316" }, // orange
+      { key: "depth",      label: "Depth XP",      color: "#3b82f6" }, // blue
+      { key: "overall",    label: "Overall XP",    color: "#22c55e" }  // green
+    ];
+
+    let chart;
+    let seriesActions = null; // {confidence:[...], depth:[...], overall:[...]}
+    let seriesDays = null;    // same shape
+    let dayLabels = [];       // index -> 'YYYY-MM-DD'
+    let currentMode = "actions"; // 'actions' | 'days'
+    const trackHidden = { confidence:false, depth:false, overall:false };
+
+    // ---------- Parsing ----------
+    function parseLog(raw) {
+      const lines = raw.split(/\r?\n/).map(l => l.trim());
+      const entries = [];
+
+      for (const line of lines) {
+        if (!line) continue;
+
+        // Format 1:
+        // 2025-11-11 23:59:22 — empathy +5 — ...
+        let m = line.match(
+          /^(\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?).*?\b(respect|wisdom|vitality|wealth|empathy|focus|discipline|inspiration|bravery|harmony)\b.*?([+-]\d+)\b/i
+        );
+        if (m) {
+          const [_, dateStr, domainRaw, deltaStr] = m;
+          const domain = domainRaw.toLowerCase();
+          const delta = parseInt(deltaStr, 10);
+          if (!Number.isNaN(delta)) {
+            entries.push({ time: new Date(dateStr), domain, delta });
+            continue;
+          }
+        }
+
+        // Format 2:
+        // 2025-11-11|discipline|+3|note
+        const parts = line.split("|");
+        if (parts.length >= 3 && /\d{4}-\d{2}-\d{2}/.test(parts[0])) {
+          const dateStr = parts[0].trim();
+          const domain = parts[1].trim().toLowerCase();
+          const delta = parseInt(parts[2].trim(), 10);
+          if (DOMAINS.includes(domain) && !Number.isNaN(delta)) {
+            entries.push({ time: new Date(dateStr), domain, delta });
+            continue;
+          }
+        }
+      }
+
+      entries.sort((a, b) => a.time - b.time);
+      return entries;
+    }
+
+    // ---------- Series by ACTION ----------
+    function buildTrackSeriesByAction(entries) {
+      let conf = 0;
+      let depth = 0;
+      let overall = 0;
+
+      const series = {
+        confidence: [],
+        depth: [],
+        overall: []
+      };
+
+      let step = 0;
+      for (const entry of entries) {
+        const { domain, delta } = entry;
+        if (!DOMAINS.includes(domain)) continue;
+
+        step += 1;
+
+        overall += delta;
+        if (CONFIDENCE_DOMAIN_KEYS.includes(domain)) {
+          conf += delta;
+        } else if (DEPTH_DOMAIN_KEYS.includes(domain)) {
+          depth += delta;
+        }
+
+        series.confidence.push({ x: step, y: conf });
+        series.depth.push({ x: step, y: depth });
+        series.overall.push({ x: step, y: overall });
+      }
+
+      return series;
+    }
+
+    // ---------- Series by DAY ----------
+    function buildTrackSeriesByDay(entries) {
+      let conf = 0;
+      let depth = 0;
+      let overall = 0;
+
+      const series = {
+        confidence: [],
+        depth: [],
+        overall: []
+      };
+      const labels = []; // 'YYYY-MM-DD'
+
+      // Group entries by date string
+      const byDate = new Map();
+      for (const e of entries) {
+        const dateStr = e.time.toISOString().slice(0,10); // YYYY-MM-DD
+        if (!byDate.has(dateStr)) byDate.set(dateStr, []);
+        byDate.get(dateStr).push(e);
+      }
+
+      const dates = Array.from(byDate.keys()).sort();
+
+      let dayIndex = 0;
+      for (const dateStr of dates) {
+        const dayEntries = byDate.get(dateStr);
+        for (const entry of dayEntries) {
+          const { domain, delta } = entry;
+          if (!DOMAINS.includes(domain)) continue;
+
+          overall += delta;
+          if (CONFIDENCE_DOMAIN_KEYS.includes(domain)) {
+            conf += delta;
+          } else if (DEPTH_DOMAIN_KEYS.includes(domain)) {
+            depth += delta;
+          }
+        }
+
+        dayIndex += 1;
+        labels.push(dateStr);
+
+        series.confidence.push({ x: dayIndex, y: conf });
+        series.depth.push({ x: dayIndex, y: depth });
+        series.overall.push({ x: dayIndex, y: overall });
+      }
+
+      return { series, labels };
+    }
+
+    // ---------- Legend ----------
+    function renderLegend() {
+      const legend = document.getElementById("legend");
+      legend.innerHTML = "";
+
+      TRACKS.forEach(track => {
+        const item = document.createElement("span");
+        item.dataset.track = track.key;
+
+        const dot = document.createElement("span");
+        dot.className = "legend-dot";
+        dot.style.background = track.color;
+
+        item.appendChild(dot);
+        item.appendChild(document.createTextNode(track.label));
+
+        if (trackHidden[track.key]) item.classList.add("inactive");
+
+        item.addEventListener("click", () => toggleTrack(track.key));
+        legend.appendChild(item);
+      });
+    }
+
+    function toggleTrack(key) {
+      if (!chart) return;
+      const ds = chart.data.datasets.find(d => d.trackKey === key);
+      if (!ds) return;
+
+      ds.hidden = !ds.hidden;
+      trackHidden[key] = !!ds.hidden;
+
+      const legendItem = document.querySelector(
+        `.legend span[data-track="${key}"]`
+      );
+      if (legendItem) {
+        legendItem.classList.toggle("inactive", !!ds.hidden);
+      }
+
+      chart.update();
+    }
+
+    // ---------- Chart ----------
+    function renderChart() {
+      if (!seriesActions || !seriesDays) return;
+
+      const ctx = document.getElementById("xpChart").getContext("2d");
+      if (chart) chart.destroy();
+
+      const series = currentMode === "actions" ? seriesActions : seriesDays;
+      const datasets = TRACKS.map(track => ({
+        label: track.label,
+        trackKey: track.key,
+        data: series[track.key],
+        borderColor: track.color,
+        backgroundColor: track.color,
+        fill: false,
+        tension: 0.25,
+        pointRadius: 2,
+        borderWidth: 2.2,
+        hidden: trackHidden[track.key]
+      }));
+
+      const modeHint = document.getElementById("modeHint");
+      if (currentMode === "actions") {
+        modeHint.textContent = "X-axis = action number • Y-axis = total XP.";
+      } else {
+        modeHint.textContent =
+          "X-axis = unique active days (Day #) • Y-axis = total XP (cumulative). Tooltip shows exact date.";
+      }
+
+      chart = new Chart(ctx, {
+        type: "line",
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: (items) => {
+                  const x = items[0].parsed.x;
+                  if (currentMode === "actions") {
+                    return `Action #${x}`;
+                  } else {
+                    const idx = Math.max(0, Math.min(dayLabels.length - 1, x - 1));
+                    return `Day #${x} (${dayLabels[idx]})`;
+                  }
+                },
+                label: (item) =>
+                  `${item.dataset.label}: ${item.parsed.y} XP`
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: "linear",
+              title: {
+                display: true,
+                text: currentMode === "actions"
+                  ? "Actions (chronological)"
+                  : "Days with activity (chronological)"
+              },
+              ticks: { precision: 0 },
+              grid: { color: "rgba(148,163,184,0.1)" }
+            },
+            y: {
+              title: { display: true, text: "Total XP" },
+              beginAtZero: true,
+              grid: { color: "rgba(148,163,184,0.12)" }
+            }
+          }
+        }
+      });
+
+      renderLegend();
+    }
+
+    // ---------- Wiring ----------
+    document.getElementById("parseButton").addEventListener("click", () => {
+      const raw = document.getElementById("logInput").value || "";
+      const statusEl = document.getElementById("status");
+
+      if (!raw.trim()) {
+        statusEl.textContent = "Paste your Export Activity Log first.";
+        return;
+      }
+
+      const entries = parseLog(raw);
+      if (!entries.length) {
+        statusEl.textContent =
+          "No valid entries found. Make sure you pasted the Export Activity Log exactly.";
+        return;
+      }
+
+      seriesActions = buildTrackSeriesByAction(entries);
+      const dayResult = buildTrackSeriesByDay(entries);
+      seriesDays = dayResult.series;
+      dayLabels = dayResult.labels;
+
+      currentMode = "actions";
+      document.getElementById("modeActions").classList.add("active");
+      document.getElementById("modeDays").classList.remove("active");
+
+      renderChart();
+
+      statusEl.textContent =
+        `Parsed ${entries.length} actions.\n` +
+        `Days with activity: ${dayLabels.length}.\n` +
+        `Tracks shown: Confidence, Depth, Overall XP. Use the pills to hide/show tracks.`;
+    });
+
+    document.getElementById("modeActions").addEventListener("click", () => {
+      if (currentMode === "actions") return;
+      currentMode = "actions";
+      document.getElementById("modeActions").classList.add("active");
+      document.getElementById("modeDays").classList.remove("active");
+      renderChart();
+    });
+
+    document.getElementById("modeDays").addEventListener("click", () => {
+      if (currentMode === "days") return;
+      currentMode = "days";
+      document.getElementById("modeDays").classList.add("active");
+      document.getElementById("modeActions").classList.remove("active");
+      renderChart();
+    });
+  </script>
+</body>
+</html>

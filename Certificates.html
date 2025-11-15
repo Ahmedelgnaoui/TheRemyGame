@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>The Remy — Certificates</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+  body {
+    background: #0e1117;
+    color: #e8eef6;
+    font-family: system-ui, sans-serif;
+    padding: 20px;
+  }
+
+  h1 { text-align: center; margin-top: 0; }
+  h2 { margin-bottom: 8px; }
+
+  .row-title {
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    margin: 40px 0 18px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+
+    color: #facc6b;              /* warm gold */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+
+    text-shadow: 0 0 8px rgba(250, 204, 107, 0.4);
+  }
+
+  .row-title::before,
+  .row-title::after {
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  /* Confidence row */
+  .conf-title::before,
+  .conf-title::after {
+    content: "⚔️";
+  }
+
+  /* Depth row */
+  .depth-title::before,
+  .depth-title::after {
+    content: "⛩️";
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 18px;
+    margin-bottom: 40px;
+  }
+
+  .card {
+    background: #141a24;
+    border: 1px solid #233047;
+    border-radius: 14px;
+    padding: 18px;
+    text-align: center;
+    transition: 0.25s;
+    min-height: 220px;
+  }
+
+  /* base unlocked style: let tier classes control color */
+  .card.unlocked {
+    box-shadow: 0 0 15px rgba(58, 227, 116, 0.25);
+  }
+
+  .card.locked {
+    opacity: 0.35;
+    filter: grayscale(100%);
+  }
+
+  /* Tier visual accents */
+  .card-tier {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #9aa6b2;
+    margin-bottom: 6px;
+  }
+
+  .card.bronze .card-tier {
+    color: #fb923c;
+  }
+
+  .card.silver .card-tier {
+    color: #e5e7eb;
+  }
+
+  .card.gold .card-tier {
+    color: #fde68a;
+  }
+
+  /* Tier-specific thick borders when unlocked */
+  .card.bronze.unlocked {
+    border: 3px solid #cd7f32;      /* bronze */
+    box-shadow: 0 0 18px rgba(205, 127, 50, 0.5);
+  }
+
+  .card.silver.unlocked {
+    border: 3px solid #c0c0c0;      /* silver */
+    box-shadow: 0 0 18px rgba(192, 192, 192, 0.5);
+  }
+
+  .card.gold.unlocked {
+    border: 3px solid #ffd700;      /* gold */
+    box-shadow: 0 0 18px rgba(255, 215, 0, 0.55);
+  }
+
+  .emoji {
+    font-size: 42px;
+    margin-bottom: 10px;
+  }
+
+  .title {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .desc {
+    font-size: 16px;
+    color: #9aa6b2;
+  }
+
+  .unlock-msg {
+    margin-top: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #3ae374;
+  }
+
+  .locked-msg {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #9aa6b2;
+  }
+
+  /* ===== Overall Level Cards Section ===== */
+
+  .overall-section {
+    margin-top: 10px;
+    padding-top: 26px;
+    border-top: 1px solid #1f2933;
+  }
+
+  .overall-heading {
+    text-align: center;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: #9aa6b2;
+    margin-bottom: 18px;
+  }
+
+  .overall-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    max-width: 900px;
+    margin: 0 auto 10px;
+  }
+
+  .overall-card {
+    position: relative;
+    background: radial-gradient(circle at top left, #1f2937 0, #0b1120 55%, #020617 100%);
+    border-radius: 16px;
+    padding: 16px 18px 14px;
+    border: 1px solid #273549;
+    box-shadow: 0 0 25px rgba(15, 23, 42, 0.8);
+    overflow: hidden;
+  }
+
+  .overall-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(120deg, rgba(248, 250, 252, 0.1), transparent 40%, transparent 60%, rgba(148, 163, 184, 0.35)) border-box;
+    mask:
+      linear-gradient(#000 0 0) padding-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0.65;
+    pointer-events: none;
+  }
+
+  .overall-card-conf {
+    border-color: rgba(250, 204, 107, 0.7);
+  }
+
+  .overall-card-depth {
+    border-color: rgba(96, 165, 250, 0.7);
+  }
+
+  /* button to open levels popup */
+  .levels-btn {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    z-index: 3;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.8);
+    background: rgba(15, 23, 42, 0.9);
+    color: #e5e7eb;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .levels-btn span {
+    opacity: 0.8;
+  }
+
+  .levels-btn:hover {
+    background: rgba(15, 23, 42, 1);
+  }
+
+  .overall-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 1px solid rgba(148, 163, 184, 0.8);
+    color: #e5e7eb;
+    background: rgba(15, 23, 42, 0.8);
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .overall-pill-conf span.icon {
+    color: #fed7aa;
+  }
+
+  .overall-pill-depth span.icon {
+    color: #93c5fd;
+  }
+
+  .overall-main {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .overall-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 23px;
+    background: radial-gradient(circle at 30% 15%, rgba(248, 250, 252, 0.22), transparent 55%);
+  }
+
+  .overall-icon-conf {
+    border: 1px solid rgba(250, 204, 107, 0.9);
+  }
+
+  .overall-icon-depth {
+    border: 1px solid rgba(96, 165, 250, 0.9);
+  }
+
+  .overall-level {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .overall-level-conf {
+    color: #fbbf24;
+  }
+
+  .overall-level-depth {
+    color: #60a5fa;
+  }
+
+  .overall-label {
+    font-size: 13px;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    margin-top: 1px;
+  }
+
+  .overall-note {
+    font-size: 13px;
+    color: #d1d5db;
+    margin-top: 4px;
+  }
+
+  .overall-xp {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 6px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ===== Levels Modal ===== */
+
+  .levels-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+
+  .levels-modal.show {
+    display: flex;
+  }
+
+  .levels-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(4px);
+  }
+
+  .levels-panel {
+    position: relative;
+    z-index: 51;
+    width: 100%;
+    max-width: 420px;
+    background: #020617;
+    border-radius: 18px;
+    border: 1px solid #1f2937;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    padding: 14px 16px 14px;
+  }
+
+  .levels-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .levels-title {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: #e5e7eb;
+  }
+
+  .levels-close {
+    border: none;
+    background: transparent;
+    color: #9ca3af;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .levels-close:hover {
+    color: #e5e7eb;
+  }
+
+  .levels-subtitle {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-bottom: 8px;
+  }
+
+  .levels-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .level-item {
+    border-radius: 12px;
+    padding: 7px 9px;
+    border: 1px solid #1f2937;
+    background: #020617;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11px;
+  }
+
+  .level-item.reached {
+    border-color: #4ade80;
+    background: radial-gradient(circle at top left, rgba(34, 197, 94, 0.2), #020617 55%);
+  }
+
+  .level-name {
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .level-name span.badge {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    border: 1px solid #4b5563;
+    margin-left: 6px;
+  }
+
+  .level-note {
+    color: #d1d5db;
+  }
+
+  .level-xp {
+    color: #9ca3af;
+    font-size: 10px;
+  }
+
+  .level-item.locked {
+    opacity: 0.35;
+    filter: grayscale(100%);
+  }
+
+  @media (max-width: 900px) {
+    .overall-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (max-width: 1100px) {
+    .grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  }
+</style>
+</head>
+
+<body>
+<h1>🏅 Remy — Certificates of Mastery</h1>
+<p style="text-align:center;color:#9aa6b2;margin-top:-10px;">
+  Earn 200 XP for Bronze, 500 XP for Silver, and 1000 XP for Gold in any domain.
+</p>
+
+<!-- Overall level badges section -->
+<section class="overall-section">
+  <div class="overall-heading">Overall Level Badges</div>
+  <div class="overall-grid">
+    <div id="confOverall" class="overall-card overall-card-conf"></div>
+    <div id="depthOverall" class="overall-card overall-card-depth"></div>
+  </div>
+</section>
+
+<!-- Levels popup modal -->
+<div id="levelsModal" class="levels-modal">
+  <div class="levels-backdrop" onclick="closeLevels()"></div>
+  <div class="levels-panel">
+    <div class="levels-header">
+      <div class="levels-title" id="levelsModalTitle"></div>
+      <button class="levels-close" type="button" onclick="closeLevels()">✕</button>
+    </div>
+    <div class="levels-subtitle" id="levelsModalSubtitle"></div>
+    <div class="levels-list" id="levelsModalBody"></div>
+  </div>
+</div>
+
+
+
+<div class="row-title conf-title">Confidence Certificates</div>
+<div class="grid" id="confidenceGrid"></div>
+
+<div class="row-title depth-title">Depth Certificates</div>
+<div class="grid" id="depthGrid"></div>
+
+
+<script>
+// Use same storage key as main game
+// Use same storage key as main game
+const SKEY = "irlxp_game_v1";
+let STATE = JSON.parse(localStorage.getItem(SKEY) || "{}");
+
+// Make sure we have the shapes we expect
+if (!STATE.totals) STATE.totals = {};
+if (!STATE.feed) STATE.feed = [];
+if (!STATE.unlocked) STATE.unlocked = {};  // STATE.unlocked[domainKey] = { bronze: xp, ... }
+
+/**
+ * Return the XP at which this domain first crossed `threshold`.
+ * Uses the full activity feed (oldest → newest).
+ * Caches result into STATE.unlocked[domainKey][tierId].
+ */
+function getUnlockXPFromHistory(domainKey, tierId, threshold) {
+  if (!STATE.unlocked[domainKey]) {
+    STATE.unlocked[domainKey] = {};
+  }
+
+  const existing = STATE.unlocked[domainKey][tierId];
+
+  // If we already have a stored value, clamp it to the threshold.
+  if (typeof existing === "number") {
+    if (existing > threshold) {
+      STATE.unlocked[domainKey][tierId] = threshold;
+      localStorage.setItem(SKEY, JSON.stringify(STATE));
+      return threshold;
+    }
+    return existing;
+  }
+
+  // No stored value yet → compute from history
+  if (!Array.isArray(STATE.feed) || STATE.feed.length === 0) {
+    // No history: assume unlocked exactly at the threshold
+    STATE.unlocked[domainKey][tierId] = threshold;
+    localStorage.setItem(SKEY, JSON.stringify(STATE));
+    return threshold;
+  }
+
+  let xp = 0;
+  const history = [...STATE.feed].reverse(); // oldest -> newest
+
+  for (const entry of history) {
+    if (entry.dom === domainKey) {
+      xp += entry.pts;
+      if (xp >= threshold) {
+        // We don't know the exact overshoot, so lock at the threshold
+        STATE.unlocked[domainKey][tierId] = threshold;
+        localStorage.setItem(SKEY, JSON.stringify(STATE));
+        return threshold;
+      }
+    }
+  }
+
+  // Threshold never reached
+  return null;
+}
+
+
+// STATE.unlocked[domainKey] = { bronze: xp, silver: xp, gold: xp }
+
+// Domains split
+const CONFIDENCE = [
+  { key: "respect", emoji: "🫡", title: "Respect" },
+  { key: "vitality", emoji: "💪", title: "Vitality" },
+  { key: "wealth", emoji: "💰", title: "Wealth" },
+  { key: "discipline", emoji: "🛠", title: "Discipline" },
+  { key: "bravery", emoji: "🦁", title: "Bravery" }
+];
+
+const DEPTH = [
+  { key: "wisdom", emoji: "🧠", title: "Wisdom" },
+  { key: "empathy", emoji: "💞", title: "Empathy" },
+  { key: "focus", emoji: "🎯", title: "Focus" },
+  { key: "inspiration", emoji: "🎨", title: "Inspiration" },
+  { key: "harmony", emoji: "🕊", title: "Harmony" }
+];
+
+/**
+ * Render Bronze / Silver / Gold cards for each domain.
+ * First row = Bronze for all domains,
+ * second row = Silver for all domains,
+ * third row = Gold for all domains.
+ */
+function renderRow(list, containerId) {
+  const box = document.getElementById(containerId);
+  box.innerHTML = "";
+
+  const TIERS = [
+    { id: "bronze", name: "Bronze", threshold: 200, icon: "🥉" },
+    { id: "silver", name: "Silver", threshold: 500, icon: "🥈" },
+    { id: "gold",   name: "Gold",   threshold: 1000, icon: "🥇" }
+  ];
+
+  // Loop tiers first so the grid rows are:
+  // row 1: 5 bronze cards, row 2: 5 silver, row 3: 5 gold
+  TIERS.forEach(tier => {
+    list.forEach(d => {
+      const xp = STATE.totals[d.key] || 0;
+const unlocked = xp >= tier.threshold;
+
+// If unlocked, compute the *historical* XP at which the threshold was first crossed
+let unlockXP = null;
+if (unlocked) {
+  unlockXP = getUnlockXPFromHistory(d.key, tier.id, tier.threshold);
+  if (unlockXP == null) {
+    // fallback, shouldn't normally happen
+    unlockXP = tier.threshold;
+  }
+}
+
+const card = document.createElement("div");
+card.className = `card ${tier.id} ` + (unlocked ? "unlocked" : "locked");
+
+card.innerHTML = `
+  <div class="card-tier">${tier.icon} ${tier.name} Certificate</div>
+  <div class="emoji">${d.emoji}</div>
+  <div class="title">${d.title}</div>
+
+  <div class="desc">
+    ${
+      unlocked
+        ? `You unlocked the <b>${tier.name}</b> certificate in <b>${d.title}</b> with <b>${unlockXP} XP</b>.`
+        : `Reach <b>${tier.threshold} XP</b> in <b>${d.title}</b> to unlock the <b>${tier.name}</b> certificate.`
+    }
+  </div>
+
+  ${
+    unlocked
+      ? `<div class="unlock-msg">Unlocked at ${unlockXP} XP</div>`
+      : `<div class="locked-msg">${xp}/${tier.threshold} XP</div>`
+  }
+`;
+
+
+      box.appendChild(card);
+    });
+  });
+}
+
+/**
+ * Sum XP across a list of domains.
+ */
+function sumXP(domains) {
+  return domains.reduce((total, d) => {
+    return total + (STATE.totals[d.key] || 0);
+  }, 0);
+}
+
+/**
+ * 21-level progression (0–20), smooth curve, L20 = 10,000 XP.
+ * Listed from highest to lowest so getOverallLevelData works.
+ */
+const OVERALL_LEVELS = [
+  {
+    level: 20,
+    label: "Legendary II",
+    minXp: 10000,
+    note: "You operate at rare internal mastery. Your actions and values are fully aligned."
+  },
+  {
+    level: 19,
+    label: "Legendary I",
+    minXp: 9800,
+    note: "You live near your peak. Only small refinements separate you from the top."
+  },
+  {
+    level: 18,
+    label: "Elite III",
+    minXp: 8900,
+    note: "Your discipline and depth are exceptional. Very few sustain this level."
+  },
+  {
+    level: 17,
+    label: "Elite II",
+    minXp: 7700,
+    note: "You show strong, stable mastery over your choices and reactions."
+  },
+  {
+    level: 16,
+    label: "Elite I",
+    minXp: 6600,
+    note: "You act with intention most of the time, even when it’s hard."
+  },
+  {
+    level: 15,
+    label: "Expert III",
+    minXp: 5600,
+    note: "You’ve built powerful habits. Others feel your consistency."
+  },
+  {
+    level: 14,
+    label: "Expert II",
+    minXp: 4700,
+    note: "Your decisions regularly favor long-term growth over short-term comfort."
+  },
+  {
+    level: 13,
+    label: "Expert I",
+    minXp: 3900,
+    note: "You navigate challenges with composure and intention."
+  },
+  {
+    level: 12,
+    label: "Steady III",
+    minXp: 3200,
+    note: "Your good days now heavily outweigh your off days."
+  },
+  {
+    level: 11,
+    label: "Steady II",
+    minXp: 2600,
+    note: "You’ve built real momentum. Staying on track feels more natural."
+  },
+  {
+    level: 10,
+    label: "Steady I",
+    minXp: 2100,
+    note: "You show up often and recover quickly when you slip."
+  },
+  {
+    level: 9,
+    label: "Adept III",
+    minXp: 1700,
+    note: "Your behavior is becoming reliable. People can count on you."
+  },
+  {
+    level: 8,
+    label: "Adept II",
+    minXp: 1300,
+    note: "You handle most days with intention instead of autopilot."
+  },
+  {
+    level: 7,
+    label: "Adept I",
+    minXp: 1000,
+    note: "You’re no longer experimenting—you’re practicing for real."
+  },
+  {
+    level: 6,
+    label: "Apprentice III",
+    minXp: 740,
+    note: "You’ve proven you can stick with it. Now it’s about refinement."
+  },
+  {
+    level: 5,
+    label: "Apprentice II",
+    minXp: 520,
+    note: "You’re showing consistent effort. The gains are starting to compound."
+  },
+  {
+    level: 4,
+    label: "Apprentice I",
+    minXp: 350,
+    note: "You’ve moved beyond the starting wobble. Habits are taking shape."
+  },
+  {
+    level: 3,
+    label: "Novice III",
+    minXp: 220,
+    note: "You’re returning to this path often. The pattern is forming."
+  },
+  {
+    level: 2,
+    label: "Novice II",
+    minXp: 120,
+    note: "You’re finding your rhythm. Each action makes the next one easier."
+  },
+  {
+    level: 1,
+    label: "Novice I",
+    minXp: 50,
+    note: "You’ve taken more than a few steps. You’re officially in the game."
+  },
+  {
+    level: 0,
+    label: "Not Ranked",
+    minXp: 0,
+    note: "No activity recorded yet. Any small action will start your journey."
+  }
+];
+
+/**
+ * Get current level data from XP.
+ */
+function getOverallLevelData(xp) {
+  for (const lvl of OVERALL_LEVELS) {
+    if (xp >= lvl.minXp) return lvl;
+  }
+  return OVERALL_LEVELS[OVERALL_LEVELS.length - 1];
+}
+
+/**
+ * Render one overall badge card with button to view all levels.
+ */
+function renderOverallCard(xp, type) {
+  const el = document.getElementById(type === "confidence" ? "confOverall" : "depthOverall");
+  const data = getOverallLevelData(xp);
+
+  const isConf = type === "confidence";
+  const label = isConf ? "Confidence" : "Depth";
+  const icon = isConf ? "⚔️" : "⛩️";
+
+  el.innerHTML = `
+    <button class="levels-btn" type="button" onclick="openLevels('${type}', ${xp})">
+      <span>LEVELS</span>
+    </button>
+
+    <div class="overall-pill ${isConf ? "overall-pill-conf" : "overall-pill-depth"}">
+      <span class="icon">${icon}</span>
+      <span>${label} – Overall Level</span>
+    </div>
+
+    <div class="overall-main">
+      <div class="overall-icon ${isConf ? "overall-icon-conf" : "overall-icon-depth"}">
+        ${icon}
+      </div>
+      <div>
+        <div class="overall-level ${isConf ? "overall-level-conf" : "overall-level-depth"}">
+          Level ${data.level} · ${data.label}
+        </div>
+        <div class="overall-label">
+          ${label.toUpperCase()} SCORE
+        </div>
+        <div class="overall-note">
+          ${data.note}
+        </div>
+      </div>
+    </div>
+
+    <div class="overall-xp">
+      ${xp} XP total across all ${label.toLowerCase()} domains.
+    </div>
+  `;
+}
+
+/**
+ * Open modal and show all 21 levels, muting the ones not yet reached.
+ */
+function openLevels(type, xp) {
+  const modal = document.getElementById("levelsModal");
+  const titleEl = document.getElementById("levelsModalTitle");
+  const subtitleEl = document.getElementById("levelsModalSubtitle");
+  const bodyEl = document.getElementById("levelsModalBody");
+
+  const isConf = type === "confidence";
+  const label = isConf ? "Confidence" : "Depth";
+
+  const current = getOverallLevelData(xp);
+  const currentLevel = current.level;
+
+  titleEl.textContent = `${label.toUpperCase()} LEVELS`;
+  subtitleEl.textContent = `Current: Level ${currentLevel} · ${current.label} · ${xp} XP total`;
+
+  bodyEl.innerHTML = "";
+
+  // Show levels from 0 to 20 ascending
+  const sorted = [...OVERALL_LEVELS].sort((a, b) => a.level - b.level);
+
+  sorted.forEach(lvl => {
+    const item = document.createElement("div");
+    const reached = lvl.level <= currentLevel;
+
+    item.className = "level-item " + (reached ? "reached" : "locked");
+
+    let xpRangeText;
+    switch (lvl.level) {
+      case 0:  xpRangeText = "0 XP"; break;
+      case 1:  xpRangeText = "50–119 XP"; break;
+      case 2:  xpRangeText = "120–219 XP"; break;
+      case 3:  xpRangeText = "220–349 XP"; break;
+      case 4:  xpRangeText = "350–519 XP"; break;
+      case 5:  xpRangeText = "520–739 XP"; break;
+      case 6:  xpRangeText = "740–999 XP"; break;
+      case 7:  xpRangeText = "1000–1299 XP"; break;
+      case 8:  xpRangeText = "1300–1699 XP"; break;
+      case 9:  xpRangeText = "1700–2099 XP"; break;
+      case 10: xpRangeText = "2100–2599 XP"; break;
+      case 11: xpRangeText = "2600–3199 XP"; break;
+      case 12: xpRangeText = "3200–3899 XP"; break;
+      case 13: xpRangeText = "3900–4699 XP"; break;
+      case 14: xpRangeText = "4700–5599 XP"; break;
+      case 15: xpRangeText = "5600–6599 XP"; break;
+      case 16: xpRangeText = "6600–7699 XP"; break;
+      case 17: xpRangeText = "7700–8899 XP"; break;
+      case 18: xpRangeText = "8900–9799 XP"; break;
+      case 19: xpRangeText = "9800–9999 XP"; break;
+      case 20: xpRangeText = "10000+ XP"; break;
+      default: xpRangeText = ""; break;
+    }
+
+    item.innerHTML = `
+      <div class="level-name">
+        Level ${lvl.level} · ${lvl.label}
+        <span class="badge">${xpRangeText}</span>
+      </div>
+      <div class="level-note">${lvl.note}</div>
+      <div class="level-xp">
+        ${reached ? "Reached" : "Not reached yet"}
+      </div>
+    `;
+
+    bodyEl.appendChild(item);
+  });
+
+  modal.classList.add("show");
+}
+
+function closeLevels() {
+  const modal = document.getElementById("levelsModal");
+  modal.classList.remove("show");
+}
+
+// Render everything
+renderRow(CONFIDENCE, "confidenceGrid");
+renderRow(DEPTH, "depthGrid");
+
+const totalConfXP = sumXP(CONFIDENCE);
+const totalDepthXP = sumXP(DEPTH);
+
+renderOverallCard(totalConfXP, "confidence");
+renderOverallCard(totalDepthXP, "depth");
+</script>
+
+</body>
+</html>

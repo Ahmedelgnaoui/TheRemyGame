@@ -1,0 +1,2503 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>IRL XP — The Game (Remy)</title>
+<style>
+  :root{
+    --bg:#000000;
+    --panel:#141a24;
+    --card:#171f2c;
+    --text:#e8eef6;
+    --muted:#9aa6b2;
+    --border:#233047;
+    --accent:#6aa3ff;
+    --good:#29c16b;
+    --bad:#ff6b6b;
+    --gold:#ffd166;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:#000000;
+    color:var(--text);
+    font:15px/1.45 system-ui,Segoe UI,Inter,Roboto,Arial,sans-serif;
+  }
+  a{color:var(--accent);text-decoration:none}
+  .wrap{max-width:1200px;margin:0 auto;padding:20px}
+  header{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  h1{margin:0;font-size:clamp(20px,3.2vw,28px)}
+  .sub{color:var(--muted)}
+  .pill{
+    font-size:12px;
+    padding:3px 10px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    color:var(--muted);
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:1.2fr 1fr;
+    gap:16px;
+    margin-top:16px;
+  }
+  @media (max-width:920px){
+    .grid{grid-template-columns:1fr;}
+  }
+  .panel{
+    background:#000000;
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px;
+  }
+  h2{margin:0 0 10px;font-size:18px}
+  h3{margin:0 0 6px;font-size:15px}
+  .tiny{font-size:12px;color:var(--text)}
+  .flex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .grow{flex:1}
+  .right{margin-left:auto}
+  .sep{height:1px;background:var(--border);margin:10px 0}
+  button{
+    border:1px solid var(--border);
+    background:#000000;
+    color:var(--text);
+    border-radius:10px;
+    padding:8px 10px;
+    cursor:pointer;
+    font-size:13px;
+  }
+  button:hover{border-color:#35507a}
+  .good{border-color:#1f7a4d}
+  .bad{border-color:#874141}
+  .good:hover{border-color:#29c16b}
+  .bad:hover{border-color:#ff6b6b}
+  .mini{font-size:12px;padding:6px 8px;border-radius:8px}
+  textarea,input,select{
+    border:1px solid var(--border);
+    background:#000000;
+    color:var(--text);
+    border-radius:10px;
+    padding:8px 10px;
+    font-size:13px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:10px;
+  }
+  .toast{
+    position:fixed;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:22px;
+    background:#131b29;
+    border:1px solid var(--border);
+    padding:10px 14px;
+    border-radius:10px;
+    opacity:0;
+    transition:.2s;
+    pointer-events:none;
+    font-size:13px;
+  }
+  .toast.show{opacity:1}
+  .feed{
+    max-height:200px;
+    overflow:auto;
+    border:1px dashed var(--border);
+    padding:8px;
+    border-radius:10px;
+    background:#000000;
+    font-size:13px;
+  }
+  .feed .it{
+    padding:6px 4px;
+    border-bottom:1px dashed var(--border);
+  }
+  .feed .it:last-child{border-bottom:0}
+
+ /* Domain cards (flip) */
+.domain-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px;
+  margin:8px 0;
+  cursor:pointer;
+  position:relative;
+  min-height:120px;
+  perspective:1000px;
+}
+.domain-card:hover{border-color:#35507a}
+.card-inner{
+  position:relative;
+  width:100%;
+  height:100%;
+  transition:transform 0.6s;
+  transform-style:preserve-3d;
+}
+.domain-card.flipped .card-inner{
+  transform:rotateY(180deg);
+}
+.card-front,.card-back{
+  position:absolute;
+  width:100%;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+.card-front {
+  display:flex;
+  justify-content:center;
+  padding:20px 0;
+}
+.card-content {
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:20px;
+}
+.card-front .dom-emoji {
+  font-size:40px;
+  line-height:1;
+  flex-shrink:0;
+}
+.dom-main {
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  text-align:left;
+}
+.dom-title {
+  font-size:25px;
+  font-weight:700;
+  line-height:1.2;
+}
+.dom-xp-level {
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:14px;
+  font-size:15px;
+  font-weight:600;
+}
+.dom-xp-level .xp { color:var(--accent); }
+.dom-xp-level .level { color:var(--gold); }
+
+.card-back{
+  transform:rotateY(180deg);
+  display:grid;
+  grid-template-columns:42px 1fr;
+  gap:10px;
+  align-items:center;
+}
+.dom-emoji{font-size:22px}
+.bar-wrap {
+  position:relative;
+  height:14px;
+  margin-top:4px;
+}
+.bar{
+  height:100%;
+  background:#0f1624;
+  border:1px solid var(--border);
+  border-radius:999px;
+  overflow:hidden;
+}
+.bar > span{
+  display:block;
+  height:100%;
+  background:linear-gradient(90deg,var(--accent),#e9ff86);
+  width:0%;
+}
+/* Theming per category (Confidence vs Depth) */
+
+/* CONFIDENCE group – green/gold vibe */
+#confDomains .domain-card{
+  border-color:rgba(74,222,128,0.8);
+  background:
+    radial-gradient(circle at 0 0, rgba(34,197,94,0.22), transparent 60%),
+    radial-gradient(circle at 100% 100%, rgba(234,179,8,0.16), #050816);
+}
+
+#confDomains .domain-card .dom-xp-level .xp{
+  color:#bbf7d0; /* soft green */
+}
+
+#confDomains .domain-card .bar{
+  background:#022c22;
+  border-color:rgba(22,163,74,0.7);
+}
+#confDomains .domain-card .bar > span{
+  background:linear-gradient(90deg,#4ade80,#22c55e,#bef264);
+}
+
+/* DEPTH group – blue/purple vibe */
+#depthDomains .domain-card{
+  border-color:rgba(59,130,246,0.8);
+  background:
+    radial-gradient(circle at 0 0, rgba(59,130,246,0.24), transparent 60%),
+    radial-gradient(circle at 100% 100%, rgba(168,85,247,0.18), #020617);
+}
+
+#depthDomains .domain-card .dom-xp-level .xp{
+  color:#bfdbfe; /* soft blue */
+}
+
+#depthDomains .domain-card .bar{
+  background:#020617;
+  border-color:rgba(30,64,175,0.7);
+}
+#depthDomains .domain-card .bar > span{
+  background:linear-gradient(90deg,#38bdf8,#6366f1,#a855f7);
+}
+
+/* tiny hover polish but keep layout identical */
+#confDomains .domain-card:hover,
+#depthDomains .domain-card:hover {
+  border-color:#facc15 !important;
+  box-shadow:
+    0 0 12px rgba(250,204,21,0.45),
+    0 0 24px rgba(250,204,21,0.25);
+  transition:box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+
+
+   /* Tracks (Confidence vs Depth) – upgraded look */
+  .tracks-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:16px;
+    margin-bottom:12px;
+    align-items:stretch;
+  }
+
+  .track-column{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  /* Base card styling */
+  .track-card{
+    position:relative;
+    padding:14px 14px 12px;
+    border-radius:16px;
+    border:1px solid rgba(148,163,184,0.4);
+    background:
+      radial-gradient(circle at 0 0, rgba(148,163,184,0.18), transparent 55%),
+      radial-gradient(circle at 100% 100%, rgba(15,23,42,0.9), #050816);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    box-shadow:0 16px 40px rgba(0,0,0,0.65);
+    overflow:hidden;
+  }
+
+  /* Subtle glow overlay */
+  .track-card::before{
+    content:"";
+    position:absolute;
+    inset:-30%;
+    background:
+      radial-gradient(circle at 0 0, rgba(96,165,250,0.25), transparent 60%),
+      radial-gradient(circle at 100% 100%, rgba(251,191,36,0.25), transparent 60%);
+    mix-blend-mode:soft-light;
+    opacity:0.8;
+    pointer-events:none;
+  }
+
+  /* Per-track color identity */
+  #confTrack{
+    border-color:rgba(74,222,128,0.8);
+    background:
+      radial-gradient(circle at 0 0, rgba(34,197,94,0.22), transparent 55%),
+      radial-gradient(circle at 100% 100%, rgba(234,179,8,0.16), #020617);
+  }
+  #depthTrack{
+    border-color:rgba(59,130,246,0.8);
+    background:
+      radial-gradient(circle at 0 0, rgba(59,130,246,0.24), transparent 55%),
+      radial-gradient(circle at 100% 100%, rgba(168,85,247,0.18), #020617);
+  }
+
+  .track-header{
+    position:relative;
+    z-index:1;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+
+  .track-name{
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:0.09em;
+    text-transform:uppercase;
+    color:#e5e7eb;
+  }
+
+  .track-tag{
+    font-size:8px;
+    padding:3px 8px;
+    border-radius:999px;
+    border:1px solid rgba(148,163,184,0.55);
+    background:rgba(15,23,42,0.9);
+    color:#9ca3af;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+  }
+
+  .track-xp{
+    position:relative;
+    z-index:1;
+    font-size:22px;
+    font-weight:700;
+  }
+
+  .track-xp b{
+    font-weight:800;
+  }
+
+  .track-lv{
+    position:relative;
+    z-index:1;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    color:var(--gold);
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:999px;
+    border:1px solid rgba(250,204,21,0.6);
+    align-self:flex-start;
+    background:rgba(24,20,11,0.9);
+  }
+
+  .track-bar{
+    position:relative;
+    z-index:1;
+    height:10px;
+    background:rgba(15,23,42,0.95);
+    border:1px solid rgba(15,23,42,0.9);
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:2px;
+  }
+
+  .track-bar > span{
+    display:block;
+    height:100%;
+    width:0%;
+  }
+
+  /* Confidence bar gradient */
+  #confTrack .track-bar > span{
+    background:linear-gradient(90deg,#4ade80,#22c55e,#bef264);
+  }
+
+  /* Depth bar gradient */
+  #depthTrack .track-bar > span{
+    background:linear-gradient(90deg,#38bdf8,#6366f1,#a855f7);
+  }
+
+  .track-card .tiny{
+    position:relative;
+    z-index:1;
+    color:var(--muted);
+  }
+
+
+  /* Header pills that act like buttons */
+  #DomainsChart,
+  #ActionsChart,
+  #Certificates{
+    cursor:pointer;
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  #DomainsChart:hover,
+  #ActionsChart:hover,
+  #Certificates:hover{
+    border-color:var(--gold);
+    color:var(--gold);
+  }
+
+  /* Free XP items */
+  .freexp-item {
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:6px 14px;
+    max-width:520px;
+    width:100%;
+    cursor:pointer;
+    transition:border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+    background:#000000;
+  }
+  .freexp-item:hover {
+    border-color:var(--accent);
+    background:#141b2b;
+    transform:translateY(-1px);
+  }
+
+  /* Daily To-Do Popup */
+  .todo-overlay {
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.6);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+  }
+  .todo-overlay.show {
+    display:flex;
+  }
+  .todo-modal {
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:16px 18px;
+    max-width:460px;
+    width:100%;
+    box-shadow:0 18px 40px rgba(0,0,0,0.7);
+  }
+  .todo-header {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:6px;
+  }
+  .todo-header-title {font-weight:600;}
+  .todo-close {
+    margin-left:auto;
+    cursor:pointer;
+    font-size:18px;
+    line-height:1;
+    padding:2px 6px;
+    border-radius:999px;
+    border:1px solid transparent;
+  }
+  .todo-close:hover {
+    border-color:var(--border);
+    background:#1c2434;
+  }
+  .todo-list {
+    margin-top:10px;
+    max-height:260px;
+    overflow-y:auto;
+  }
+  .todo-item {
+    display:flex;
+    align-items:flex-start;
+    gap:8px;
+    margin-bottom:8px;
+    padding:6px 8px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:#0f1624;
+  }
+  .todo-item.done {
+    border-color:var(--good);
+    background:rgba(41,193,107,0.08);
+  }
+  .todo-item input[type="checkbox"] {margin-top:3px;}
+  .todo-text {font-size:13px;}
+  .todo-meta {
+    font-size:11px;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .todo-footer {
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+    margin-top:10px;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .todo-bonus {font-weight:600;color:var(--gold);}
+  .todo-pill {
+    cursor:pointer;
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  .todo-pill:hover {
+    border-color:var(--gold);
+    color:var(--gold);
+  }
+  select.todo-domain {min-width:140px;}
+
+  /* Remy NPC Panel */
+ .npc-panel {
+  margin:16px 0 8px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#000000;
+  font-size:13px;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 10px 30px rgba(0,0,0,0.6);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.15s ease;
+}
+
+/* PROUD – Gold */
+.npc-panel.proud {
+  border-color:rgba(250,204,21,0.9);
+  background:
+    radial-gradient(circle at top left, rgba(253,224,71,0.20), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(234,179,8,0.22), transparent 60%),
+    #000;
+  box-shadow:
+    0 0 22px rgba(250,204,21,0.45),
+    0 0 46px rgba(253,224,71,0.35);
+}
+
+/* CONCERNED – Red + Amber */
+.npc-panel.concerned {
+  border-color:rgba(248,113,113,0.9);
+  background:
+    radial-gradient(circle at top left, rgba(248,113,113,0.18), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(251,146,60,0.20), transparent 60%),
+    #000;
+  box-shadow:
+    0 0 22px rgba(248,113,113,0.45),
+    0 0 46px rgba(251,146,60,0.35);
+}
+
+/* ENCOURAGED – Blue + Purple */
+.npc-panel.encouraged {
+  border-color:rgba(59,130,246,0.9);
+  background:
+    radial-gradient(circle at top left, rgba(59,130,246,0.20), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(168,85,247,0.20), transparent 60%),
+    #000;
+  box-shadow:
+    0 0 22px rgba(59,130,246,0.45),
+    0 0 46px rgba(168,85,247,0.35);
+}
+
+/* CHILL / NEUTRAL – Gray + Soft Blue */
+.npc-panel.chill,
+.npc-panel.neutral {
+  border-color:rgba(148,163,184,0.9);
+  background:
+    radial-gradient(circle at top left, rgba(148,163,184,0.15), transparent 55%),
+    radial-gradient(circle at bottom right, rgba(129,140,248,0.15), transparent 60%),
+    #000;
+  box-shadow:
+    0 0 18px rgba(148,163,184,0.35),
+    0 0 36px rgba(129,140,248,0.25);
+}
+
+
+.npc-panel:hover {
+  transform:translateY(-1px);
+}
+
+/* Header + content stay the same */
+.npc-header {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-bottom:4px;
+}
+.npc-name {
+  font-weight:600;
+  letter-spacing:0.03em;
+}
+.npc-level {
+  font-size:11px;
+  color:var(--muted);
+}
+.npc-mood-pill {
+  font-size:11px;
+  padding:2px 8px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  margin-left:auto;
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  background:rgba(15,23,42,0.85);
+}
+.npc-body {
+  margin-top:4px;
+  line-height:1.5;
+}
+.npc-line-main {margin-bottom:3px;}
+.npc-line-meta {
+  font-size:11px;
+  color:var(--muted);
+}
+.npc-tag-row {
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:6px;
+}
+.npc-tag {
+  font-size:10px;
+  padding:2px 6px;
+  border-radius:999px;
+  border:1px solid rgba(148,163,184,0.6);
+  color:#94a3b8;
+}
+
+/* Base glow layer */
+.npc-glow {
+  position:absolute;
+  inset:-40%;
+  background:
+    radial-gradient(circle at 10% -10%, rgba(148,163,184,0.18), transparent 55%),
+    radial-gradient(circle at 110% 110%, rgba(148,163,184,0.16), transparent 55%);
+  mix-blend-mode:soft-light;
+  opacity:0.7;
+  pointer-events:none;
+  transition:background 0.25s ease, opacity 0.25s ease;
+}
+
+/* =========================
+   MOOD-BASED THEMES & GLOW
+   ========================= */
+/* PROUD – pure green glow */
+.npc-panel.proud {
+  border-color: rgba(52,211,153,0.95); /* emerald */
+  background:
+    radial-gradient(circle at top left, rgba(52,211,153,0.22), transparent 60%),
+    radial-gradient(circle at bottom right, rgba(34,197,94,0.20), transparent 60%),
+    #000; /* deep black base */
+  box-shadow:
+    0 0 20px rgba(52,211,153,0.45),
+    0 0 40px rgba(52,211,153,0.28),
+    0 0 65px rgba(34,197,94,0.25);
+}
+
+/* Glow layer */
+.npc-panel.proud .npc-glow {
+  background:
+    radial-gradient(circle at 0 0, rgba(52,211,153,0.32), transparent 60%),
+    radial-gradient(circle at 100% 100%, rgba(34,197,94,0.26), transparent 60%);
+}
+
+/* Mood pill */
+.npc-panel.proud .npc-mood-pill {
+  border-color: rgba(52,211,153,0.9);
+  color: #bbf7d0; /* soft mint green text */
+}
+
+
+/* CONCERNED – red / amber */
+.npc-panel.concerned {
+  border-color:rgba(248,113,113,0.95);
+  box-shadow:
+    0 0 22px rgba(248,113,113,0.55),
+    0 0 40px rgba(248,181,82,0.35);
+}
+.npc-panel.concerned .npc-glow {
+  background:
+    radial-gradient(circle at 0 0, rgba(248,113,113,0.35), transparent 58%),
+    radial-gradient(circle at 100% 100%, rgba(248,181,82,0.26), transparent 58%);
+}
+.npc-panel.concerned .npc-mood-pill {
+  border-color:rgba(248,113,113,0.8);
+  color:#fecaca;
+}
+
+/* ENCOURAGED – blue / cyan */
+.npc-panel.encouraged {
+  border-color:rgba(56,189,248,0.95);
+  box-shadow:
+    0 0 22px rgba(56,189,248,0.55),
+    0 0 40px rgba(129,140,248,0.38);
+}
+.npc-panel.encouraged .npc-glow {
+  background:
+    radial-gradient(circle at 0 0, rgba(56,189,248,0.32), transparent 58%),
+    radial-gradient(circle at 100% 100%, rgba(129,140,248,0.30), transparent 58%);
+}
+.npc-panel.encouraged .npc-mood-pill {
+  border-color:rgba(56,189,248,0.8);
+  color:#bae6fd;
+}
+
+/* CHILL / NEUTRAL – slate / soft violet */
+.npc-panel.chill,
+.npc-panel.neutral {
+  border-color:rgba(156,163,175,0.9);
+  box-shadow:
+    0 0 18px rgba(148,163,184,0.38),
+    0 0 34px rgba(129,140,248,0.22);
+}
+.npc-panel.chill .npc-glow,
+.npc-panel.neutral .npc-glow {
+  background:
+    radial-gradient(circle at 0 0, rgba(148,163,184,0.26), transparent 58%),
+    radial-gradient(circle at 100% 100%, rgba(129,140,248,0.22), transparent 58%);
+}
+.npc-panel.chill .npc-mood-pill,
+.npc-panel.neutral .npc-mood-pill {
+  border-color:rgba(148,163,184,0.85);
+  color:#e5e7eb;
+}
+
+
+
+
+  .cmd-suggest{
+  margin-top:6px;
+  border-radius:10px;
+  background:#0f1624;
+  border:1px solid var(--border);
+  padding:4px;
+  max-height:180px;
+  overflow:auto;
+  font-size:12px;
+  display:none;
+}
+.cmd-item{
+  padding:4px 6px;
+  cursor:pointer;
+  display:flex;
+  gap:6px;
+  align-items:center;
+  border-radius:6px;
+}
+.cmd-item:hover{
+  background:#141b2b;
+}
+.cmd-key{
+  font-weight:600;
+  color:var(--accent);
+  min-width:90px;
+}
+.cmd-label{
+  color:var(--muted);
+}
+
+#exportTxt,
+#importTxt {
+  width: 100%;
+  display: block;
+  resize: vertical; /* optional: only resize up/down */
+}
+.panel.glow {
+  position: relative;
+  background:
+    radial-gradient(circle at top left, rgba(255,255,255,0.12), transparent 60%),
+    radial-gradient(circle at bottom right, rgba(255,255,255,0.10), transparent 60%),
+    #000000;
+  border-color: rgba(255,255,255,0.35);
+  box-shadow:
+    0 0 16px rgba(255,255,255,0.25),
+    0 0 32px rgba(255,255,255,0.15);
+  transition: 
+    box-shadow 0.25s ease, 
+    border-color 0.25s ease, 
+    transform 0.15s ease;
+}
+
+/* Hover — strong clean white glow */
+.panel.glow:hover {
+  border-color: rgba(255,255,255,0.75);
+  box-shadow:
+    0 0 28px rgba(255,255,255,0.45),
+    0 0 55px rgba(255,255,255,0.25),
+    0 0 85px rgba(255,255,255,0.15);
+  transform: translateY(-2px);
+}
+
+
+.water-pill{
+  font-size:12px;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-width:220px;
+  background:#000000;
+}
+
+.water-count{
+  white-space:nowrap;
+}
+
+.water-xp{
+  white-space:nowrap;
+  color:var(--accent);
+}
+
+.water-bar-outer{
+  flex:1;
+  height:6px;
+  border-radius:999px;
+  background:#0f172a;
+  overflow:hidden;
+  border:1px solid var(--border);
+}
+
+.water-bar-inner{
+  display:block;
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#38bdf8,#22c55e);
+}
+
+.water-pill .mini{
+  font-size:10px;
+  padding:4px 6px;
+}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+<header>
+  <h1>The Remy</h1>
+  <span class="pill" id="totalConfidence">Σ Confidence XP: 0</span>
+  <span class="pill" id="totalDepth">Σ Depth XP: 0</span>
+  <span class="pill" id="overallXP">Σ Overall XP: 0</span>
+  <span class="pill" id="level">🏅 Overall Lv: 1</span>
+  <span class="pill" id="streak">🔥 Streak: 0</span>
+
+  <!-- 💧 Water bar pill -->
+  <span class="water-pill" id="waterWidget">
+    <span class="water-count" id="waterLabel">💧 0 / 2L</span>
+    <span class="water-xp" id="waterXpLabel">0 XP</span>
+    <div class="water-bar-outer">
+      <span class="water-bar-inner" id="waterBarFill"></span>
+    </div>
+    <button id="waterSmallBtn" class="mini">S</button>
+    <button id="waterBigBtn" class="mini">B</button>
+    <button id="waterResetBtn" class="mini">↺</button>
+  </span>
+
+  <span class="pill" id="Certificates">🏅 Certificates</span>
+  <span class="pill" id="DomainsChart">📊 Domains Chart</span>
+  <span class="pill" id="ActionsChart">📊 Actions Chart</span>
+  <span class="pill todo-pill" id="openTodo">📝 Daily To-Do</span>
+</header>
+
+
+  <!-- Remy NPC panel -->
+  <section class="npc-panel" id="npcPanel">
+    <div class="npc-glow"></div>
+    <div class="npc-header">
+      <span class="npc-name">🪙 Remy • IRL Companion</span>
+      <span class="npc-level" id="npcLevel">Level 1</span>
+      <span class="npc-mood-pill" id="npcMoodPill">
+        <span id="npcMoodEmoji">😐</span>
+        <span id="npcMoodLabel">Neutral</span>
+      </span>
+    </div>
+    <div class="npc-body">
+      <div class="npc-line-main" id="npcMainLine">
+        “I’m watching your domains. Let’s see what kind of hero you’ll be today.”
+      </div>
+      <div class="npc-line-meta" id="npcMetaLine">
+        Tip: Finish your Daily To-Do list to make me proud.
+      </div>
+      <div class="npc-tag-row">
+        <span class="npc-tag" id="npcStrongTag">Strongest: —</span>
+        <span class="npc-tag" id="npcWeakTag">Weakest: —</span>
+        <span class="npc-tag" id="npcBonusTag">Bonus: —</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <!-- LEFT: Dashboard -->
+    <section class="panel glow">
+      <h2>Dashboard</h2>
+
+      <!-- Confidence vs Depth summary -->
+      <div id="tracksGrid" class="tracks-grid">
+        <div class="track-column">
+          <div id="confTrack" class="track-card"></div>
+          <div id="confDomains"></div>
+        </div>
+        <div class="track-column">
+          <div id="depthTrack" class="track-card"></div>
+          <div id="depthDomains"></div>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+<div class="flex">
+  <select id="domPick"></select>
+  <input id="note" class="grow" placeholder="Note or type / for commands" />
+<button id="gain1"  class="good mini">+1</button>
+<button id="gain2"  class="good mini">+2</button>
+<button id="gain5"  class="good mini">+5</button>
+<button id="gain10" class="good mini">+10</button>
+<button id="gain20" class="good mini">+20</button>
+<button id="gain50" class="good mini">+50</button>
+
+<button id="lose1"  class="bad mini">−1</button>
+<button id="lose2"  class="bad mini">−2</button>
+<button id="lose5"  class="bad mini">−5</button>
+<button id="lose10" class="bad mini">−10</button>
+<button id="lose20" class="bad mini">−20</button>
+<button id="lose50" class="bad mini">−50</button>
+
+</div>
+
+<!-- Command suggestions -->
+<div id="cmdSuggestions" class="cmd-suggest"></div>
+
+
+      <div class="tiny" style="margin-top:6px">Tip: press <b>Z</b> to undo the last entry.</div>
+
+      <div class="sep"></div>
+      <div class="flex">
+        <button id="reset" class="mini">🧹 Reset (keep backup)</button>
+        <span class="right tiny">Your streak is based on unique days with activity.</span>
+      </div>
+
+      <div class="sep"></div>
+      <h3>Streak Bonuses</h3>
+      <p class="tiny">
+        Unlock bonuses at 5, 15, and 30 active days.
+        When unlocked, click to apply the bonus XP to the <b>currently selected domain</b>.
+      </p>
+      <div id="streakBonuses" class="flex"></div>
+    </section>
+
+    <!-- RIGHT: Activity & Export -->
+    <section class="panel glow">
+      <h2>Activity & Export</h2>
+      <div class="feed" id="feed"></div>
+
+      <div class="sep"></div>
+      <div class="flex">
+        <button id="undoLast" class="mini">↩ Undo Last Entry</button>
+        <span class="tiny">Removes the most recent entry and reverses its XP.</span>
+        <span class="right tiny" id="lastHint"></span>
+      </div>
+
+      <div class="sep"></div>
+      <div class="card">
+        <h3>Export Activity Log</h3>
+        <textarea id="exportTxt" rows="8" class="grow" placeholder="Your activity log will appear here...
+YYYY-MM-DD HH:MM:SS|domain|points|note"></textarea>
+        <div class="actions" style="margin-top:8px">
+          <button id="copyExport" class="mini">📋 Copy Export</button>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+      <div class="card">
+        <h3>Import Activity Log</h3>
+        <textarea id="importTxt" rows="8" placeholder="Paste lines like:
+2025-11-11 10:04:04|vitality|1|stretched my legs
+2025-11-11 10:04:05|harmony|5|Full meditate on elements"></textarea>
+        <div class="actions" style="margin-top:8px">
+          <button id="parseLog" class="mini">Parse & Load</button>
+          <span class="tiny">We only read your paste. Nothing leaves your browser.</span>
+        </div>
+      </div>
+
+      <div class="sep"></div>
+      <h3>Combo Actions</h3>
+      <p class="tiny">
+        Special combos you can trigger once per day each.
+        Reward applies to the <b>currently selected domain</b>.
+      </p>
+      <div id="comboActions" class="flex"></div>
+    </section>
+  </div>
+
+  <!-- FREE +1 XP panel -->
+  <div class="panel glow pulse" id="freeXpPanel" style="margin-top:16px; text-align:center;">
+    <h2>FREE +1 XP — Instant Actions</h2>
+    <p class="tiny" style="max-width:680px; margin:0 auto; line-height:1.6;">
+      Tap any card to do a tiny action right now and award yourself a clean +1 XP in that domain.
+    </p>
+    <div class="freexp-list" style="margin-top:18px; display:flex; flex-direction:column; gap:10px; align-items:center;">
+
+      <div class="tiny freexp-item" data-domain="respect"
+           data-note="Free +1 XP – fixed my posture">
+        🫡 <b>Respect</b> — Sit up straight right now and fix your posture.
+      </div>
+
+      <div class="tiny freexp-item" data-domain="wisdom"
+           data-note="Free +1 XP – learned a small fact">
+        🧠 <b>Wisdom</b> — Look up one interesting fact in 10 seconds.
+      </div>
+
+      <div class="tiny freexp-item" data-domain="vitality"
+           data-note="Free +1 XP – Did 10 Pushups">
+        💪 <b>Vitality</b> — Get down.. Do 10 pushups now, then sit back.
+      </div>
+
+      <div class="tiny freexp-item" data-domain="wealth"
+           data-note="Free +1 XP – Gained more wealth frequency">
+        💰 <b>Wealth</b> — imagine what the richest version of yourself would do, and do it.
+      </div>
+
+      <div class="tiny freexp-item" data-domain="empathy"
+           data-note="Free +1 XP – checked on someone">
+        💞 <b>Empathy</b> — Send one sincere message checking on someone.
+      </div>
+
+      <div class="tiny freexp-item" data-domain="focus"
+           data-note="Free +1 XP – cleared distractions">
+        🎯 <b>Focus</b> — Close all tabs/apps except the one you’re using now.
+      </div>
+
+      <div class="tiny freexp-item" data-domain="discipline"
+           data-note="Free +1 XP – put one thing back in place">
+        🛠 <b>Discipline</b> — Put one object or garbage back in its proper place instantly.
+      </div>
+
+      <div class="tiny freexp-item" data-domain="inspiration"
+           data-note="Free +1 XP – captured an idea">
+        🎨 <b>Inspiration</b> — Capture a quick idea in your notes: one sentence only.
+      </div>
+
+      <div class="tiny freexp-item" data-domain="bravery"
+           data-note="Free +1 XP – started an avoidable task">
+        🦁 <b>Bravery</b> — Start a task you’ve been avoiding for 60 seconds.
+      </div>
+
+      <div class="tiny freexp-item" data-domain="harmony"
+           data-note="Free +1 XP – relaxed body and breath">
+        🕊 <b>Harmony</b> — Unclench your jaw, drop your shoulders, 5 breaths.
+      </div>
+
+    </div>
+    <p class="tiny" style="margin-top:14px; max-width:620px; margin-left:auto; margin-right:auto;">
+      Each tap is a real action + a real +1 XP. Tiny, but they stack into something huge.
+    </p>
+  </div>
+</div>
+
+<div id="toast" class="toast">Copied</div>
+
+<!-- Daily To-Do Popup -->
+<div id="todoOverlay" class="todo-overlay">
+  <div class="todo-modal">
+    <div class="todo-header">
+      <span class="todo-header-title">📝 Daily To-Do List</span>
+      <span id="todoClose" class="todo-close" title="Close">✕</span>
+    </div>
+    <div class="tiny">
+      Finish these small IRL quests to earn XP.
+      Completing all of them unlocks a <span class="todo-bonus">+10 XP</span> bonus in any domain.
+    </div>
+    <div id="todoList" class="todo-list"></div>
+    <div class="todo-footer">
+      <span id="todoProgress"></span>
+      <span class="grow"></span>
+      <select id="todoBonusDomain" class="todo-domain"></select>
+      <button id="todoClaimBonus" class="good mini">Claim +10 Bonus</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/********************
+ * DOMAINS & TRACKS
+ ********************/
+const DOMAINS = [
+  { key:"respect",     emoji:"🫡", title:"Respect"     },
+  { key:"wisdom",      emoji:"🧠", title:"Wisdom"      },
+  { key:"vitality",    emoji:"💪", title:"Vitality"    },
+  { key:"wealth",      emoji:"💰", title:"Wealth"      },
+  { key:"empathy",     emoji:"💞", title:"Empathy"     },
+  { key:"focus",       emoji:"🎯", title:"Focus"       },
+  { key:"discipline",  emoji:"🛠", title:"Discipline"  },
+  { key:"inspiration", emoji:"🎨", title:"Inspiration" },
+  { key:"bravery",     emoji:"🦁", title:"Bravery"     },
+  { key:"harmony",     emoji:"🕊", title:"Harmony"     },
+];
+
+const SHORTCUTS = {
+  // -------- FOCUS (yours + new) --------
+
+  "/1hfocus":  { domain:"focus",      delta:5,  text:"1h session with full focus | focus +5" },
+  "/pomodoro1":  { domain:"focus",      delta:10, text:"2h30min pomodoro deep work | focus +10" },
+
+  "/lazerfocus":   { domain:"focus",      delta:1,  text:"+5 minutes of focusing on one thing | focus +1" },
+  "/focus10":  { domain:"focus",      delta:2,  text:"10-minute focused sprint | focus +2" },
+  "/Task": { domain:"focus",    delta:3,  text:"Did one task start→finish with no switching | focus +3" },
+
+
+  // -------- DISCIPLINE (yours + new) --------
+  "/wakeOnTime":  { domain:"discipline", delta:3, text:"Woke up at the planned time | discipline +3" },
+  "/noSnooze":    { domain:"discipline", delta:-2, text:"hit snooze the alarm | discipline -2" },
+  "/dailyPlan":   { domain:"discipline", delta:10, text:"Finished my schedule | discipline +10" },
+
+  "/prepTomorrow":{ domain:"discipline", delta:2, text:"Prepared tomorrow’s plan in advance | discipline +2" },
+
+
+  // -------- WEALTH --------
+  "/tpt":       { domain:"wealth",      delta:5, text:"A new TPT product created | wealth +5" },
+  "/tptDraft":  { domain:"wealth",      delta:2, text:"Drafted a new TPT idea | wealth +2" },
+  "/tptFix":    { domain:"wealth",      delta:2, text:"Improved an old product | wealth +2" },
+  "/tptTags":   { domain:"wealth",      delta:5, text:"Lived with the minimum for the day | wealth +5" },
+
+
+  // -------- Inspiration --------
+
+  "/idea":      { domain:"inspiration", delta:1, text:"A note in Creativity and discovery | inspiration +1" },
+  "/Draw":      { domain:"inspiration", delta:5, text:"A drawing from the heart | inspiration +5" },
+  "/Guitar":      { domain:"inspiration", delta:5, text:"Played guitar more than 10 minutes | inspiration +5" },
+  "/SharpEye":      { domain:"inspiration", delta:10, text:"Analysed a full painting | inspiration +10" },
+  "/Wrote a chapter":      { domain:"inspiration", delta:20, text:"Analysed a full painting | inspiration +20" },
+
+  // -------- WISDOM / READING --------
+  "/Reading":    { domain:"wisdom",     delta:5,  text:"Read for more than 10 min | wisdom +5" },
+  "/Reading1h":  { domain:"wisdom",     delta:10, text:"Read for more than 1h | wisdom +10" },
+
+  "/learn1":     { domain:"wisdom",     delta:1, text:"Learned 1 new idea today | wisdom +1" },
+  "/course10":   { domain:"wisdom",     delta:2, text:"Watched 10 minutes of a course | wisdom +2" },
+  "/notes":      { domain:"wisdom",     delta:3, text:"Took structured notes on something | wisdom +3" },
+  "/analyze":    { domain:"wisdom",     delta:3, text:"Analyzed a book/article instead of just reading | wisdom +3" },
+  "/podcast":    { domain:"wisdom",     delta:2, text:"Listened to an educational podcast | wisdom +2" },
+
+  // -------- VITALITY (yours + new) --------
+  "/pushups": { domain:"vitality", delta:5, text:"10 minutes session workout | vitality +5" },
+  "/water":   { domain:"vitality", delta:2, text:"Drank a small bottle of water | vitality +2" },
+  "/stretch": { domain:"vitality", delta:5, text:"+40 pushups straight | vitality +5" },
+
+
+  // -------- RESPECT / EMPATHY (yours + new) --------
+  "/checkin":   { domain:"empathy",  delta:5, text:"Checked on someone’s wellbeing | empathy +5" },
+  "/compliment":{ domain:"empathy",  delta:1, text:"Gave a genuine compliment | empathy +3" },
+  "/advice":{ domain:"empathy",  delta:1, text:"Gave a genuine advice | empathy +3" },
+  "/smile":{ domain:"empathy",  delta:1, text:"Smiled at someone | empathy 1" },
+  "/lie":{ domain:"empathy",  delta:1, text:"lied to someone | empathy -5" },
+
+  "/selfcare":  { domain:"respect",  delta:2, text:"Did one small act of self-care | respect +2" },
+  "/eyeBreak":  { domain:"respect",  delta:1, text:"Rested my eyes for a moment | respect +1" },
+
+  "/listen":    { domain:"empathy",  delta:2, text:"Listened fully without interrupting | empathy +2" },
+  "/gratitude": { domain:"harmony",  delta:1, text:"Wrote 1 gratitude line | harmony +1" },
+
+  // -------- BRAVERY --------
+  "/hardTask":  { domain:"bravery", delta:3, text:"Did a task I’ve been avoiding | bravery +3" },
+  "/ask":       { domain:"bravery", delta:2, text:"Asked a question despite fear | bravery +2" },
+  "/Remy":      { domain:"bravery", delta:5, text:"Used Remy for a bold decision | bravery +5" },
+  "/French":      { domain:"bravery", delta:7, text:"Spoke french for more than 30 minutes | bravery +7" },
+  "/truth":     { domain:"bravery", delta:5, text:"Said something honest instead of just polite | bravery +5" },
+  "/coldStart": { domain:"bravery", delta:5, text:"Started even while unmotivated | bravery +5" },
+
+  // -------- HARMONY / ORDER --------
+  "/elements":     { domain:"harmony", delta:1, text:"Meditation with elements | harmony +5" },
+  "/beauty":  { domain:"harmony", delta:1, text:"Looked for beauty beside me for 2 mintues | harmony +2" },
+  "/freshAir":  { domain:"harmony", delta:1, text:"Went outside for fresh air | harmony +2" },
+  "/Tree":     { domain:"harmony", delta:1, text:"Sat in the Garden and named a tree | harmony +5" },
+  "/morningDiary":{ domain:"harmony", delta:5, text:"Finished my Morning diary in the morning | discipline +5" },
+};
+
+
+function getCommandsArray() {
+  return Object.entries(SHORTCUTS).map(([key, def]) => {
+    const domMeta = getDomainMeta(def.domain);
+    return {
+      key,
+      label: def.text,
+      domain: def.domain,
+      domainTitle: domMeta.title,
+      domainEmoji: domMeta.emoji
+    };
+  });
+}
+
+function renderCommandSuggestions(filterText) {
+  if (!cmdSuggestionsEl) return;
+
+  const all = getCommandsArray();
+  const f = (filterText || "").toLowerCase();
+
+  let list = all;
+  if (f) {
+    list = all.filter(c =>
+      c.key.toLowerCase().includes(f) ||
+      c.label.toLowerCase().includes(f) ||
+      c.domain.toLowerCase().includes(f)
+    );
+  }
+
+  if (!list.length) {
+    cmdSuggestionsEl.style.display = "none";
+    cmdSuggestionsEl.innerHTML = "";
+    return;
+  }
+
+  cmdSuggestionsEl.innerHTML = list.map(c => `
+    <div class="cmd-item" data-cmd="${c.key}">
+      <span class="cmd-key">${c.key}</span>
+      <span class="cmd-label">${c.domainEmoji} ${c.domainTitle} — ${c.label}</span>
+    </div>
+  `).join("");
+
+  cmdSuggestionsEl.style.display = "block";
+}
+
+function hideCommandSuggestions() {
+  if (!cmdSuggestionsEl) return;
+  cmdSuggestionsEl.style.display = "none";
+  cmdSuggestionsEl.innerHTML = "";
+}
+
+
+
+const CONFIDENCE_DOMAIN_KEYS = ["respect","vitality","wealth","discipline","bravery"];
+
+const SKEY = "irlxp_game_v1";
+let STATE = JSON.parse(localStorage.getItem(SKEY) || "{}");
+
+function todayStr(){
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+// Initial state if missing
+if (!STATE.totals) {
+  STATE = {
+    totals:Object.fromEntries(DOMAINS.map(d=>[d.key,0])),
+    feed:[],
+    lastDay:todayStr(),
+    streak:0,
+    lastNote:"",
+    bonusUsed:{5:false,15:false,30:false},
+    comboLastDay:{},
+    todo:{
+      day:todayStr(),
+      done:{},
+      bonusClaimed:false
+    },
+    npc:{
+      personality:"tactical_friend",
+      lastMood:"neutral",
+      lastLevel:1
+    }
+  };
+}
+
+if (!STATE.water) {
+  STATE.water = {
+    day: todayStr(),  // "YYYY-MM-DD"
+    small: 0,         // number of small bottles today
+    big: 0            // number of big bottles today
+  };
+  function resetWaterDayIfNeeded(){
+  const today = todayStr();
+  if (!STATE.water || STATE.water.day !== today){
+    STATE.water = {
+      day: today,
+      small: 0,
+      big: 0,
+      bonusClaimed: false
+    };
+    save();
+  }
+}
+
+}
+
+// Migrations / safety
+if (!STATE.feed) STATE.feed = [];
+if (!STATE.totals) STATE.totals = Object.fromEntries(DOMAINS.map(d=>[d.key,0]));
+if (!STATE.bonusUsed) {
+  const legacy = STATE.bonusAwarded || {5:false,15:false,30:false};
+  STATE.bonusUsed = {
+    5:!!legacy[5],
+    15:!!legacy[15],
+    30:!!legacy[30]
+  };
+}
+if (!STATE.comboLastDay || typeof STATE.comboLastDay !== "object") {
+  if (typeof STATE.comboLastDay === "string") {
+    STATE.comboLastDay = { morning: STATE.comboLastDay };
+  } else {
+    STATE.comboLastDay = {};
+  }
+}
+if (!STATE.todo || !STATE.todo.day) {
+  STATE.todo = {
+    day:todayStr(),
+    done:{},
+    bonusClaimed:false
+  };
+}
+if (!STATE.npc) {
+  STATE.npc = {
+    personality:"tactical_friend",
+    lastMood:"neutral",
+    lastLevel:1
+  };
+}
+
+function save(){
+  localStorage.setItem(SKEY, JSON.stringify(STATE));
+}
+
+/********************
+ * DOM REFS
+ ********************/
+const confDomainsEl = document.getElementById("confDomains");
+const depthDomainsEl = document.getElementById("depthDomains");
+const domPick        = document.getElementById("domPick");
+const confTrackEl    = document.getElementById("confTrack");
+const depthTrackEl   = document.getElementById("depthTrack");
+const noteEl         = document.getElementById("note");
+const cmdSuggestionsEl = document.getElementById("cmdSuggestions");
+
+const feedEl         = document.getElementById("feed");
+const lastHint       = document.getElementById("lastHint");
+const streakBox      = document.getElementById("streakBonuses");
+
+// Water tracking constants
+const WATER_GOAL_L      = 2;
+const SMALL_BOTTLE_L    = WATER_GOAL_L / 6; // ~0.33L, 6 small → 2L
+const BIG_BOTTLE_L      = WATER_GOAL_L / 2; // 1L, 2 big → 2L
+const SMALL_BOTTLE_XP   = 2;                // small bottle → +2 XP
+const BIG_BOTTLE_XP     = 6;                // big bottle → +6 XP
+const WATER_DOMAIN_KEY  = "vitality";       // XP goes to Vitality
+
+// Water widget DOM elements
+const waterLabel    = document.getElementById("waterLabel");
+const waterXpLabel  = document.getElementById("waterXpLabel");
+const waterBarFill  = document.getElementById("waterBarFill");
+const waterSmallBtn = document.getElementById("waterSmallBtn");
+const waterBigBtn   = document.getElementById("waterBigBtn");
+const waterResetBtn = document.getElementById("waterResetBtn");
+
+// To-Do DOM
+const todoOverlay      = document.getElementById("todoOverlay");
+const todoListEl       = document.getElementById("todoList");
+const todoProgressEl   = document.getElementById("todoProgress");
+const todoBonusSelect  = document.getElementById("todoBonusDomain");
+const todoClaimBonusEl = document.getElementById("todoClaimBonus");
+const todoOpenBtn      = document.getElementById("openTodo");
+const todoCloseBtn     = document.getElementById("todoClose");
+
+// NPC DOM
+const npcPanel     = document.getElementById("npcPanel");
+const npcLevelEl   = document.getElementById("npcLevel");
+const npcMoodEmoji = document.getElementById("npcMoodEmoji");
+const npcMoodLabel = document.getElementById("npcMoodLabel");
+const npcMainLine  = document.getElementById("npcMainLine");
+const npcMetaLine  = document.getElementById("npcMetaLine");
+const npcStrongTag = document.getElementById("npcStrongTag");
+const npcWeakTag   = document.getElementById("npcWeakTag");
+const npcBonusTag  = document.getElementById("npcBonusTag");
+
+/********************
+ * TRACKS & DOMAINS
+ ********************/
+function calcLevel(xp){ return Math.floor(xp/20) + 1; }
+function nextLevelAt(xp){
+  const m = xp % 20;
+  return m === 0 ? 20 : (20 - m);
+}
+
+function renderTracksSummary(totalConfidence, totalDepth){
+  const confLevel = Math.floor(totalConfidence/50) + 1;
+  const depthLevel = Math.floor(totalDepth/50) + 1;
+
+  const confPct  = Math.min(100, Math.round((totalConfidence % 50) / 50 * 100));
+  const depthPct = Math.min(100, Math.round((totalDepth % 50) / 50 * 100));
+
+  confTrackEl.innerHTML = `
+    <div class="track-header">
+      <div class="track-name">⚔️Confidence Track⚔️</div>
+  
+    </div>
+    <div class="track-xp">XP: <b>${totalConfidence}</b></div>
+    <div class="track-lv">Level: ${confLevel}</div>
+    <div class="track-bar"><span style="width:${confPct}%"></span></div>
+    <div class="tiny">${totalConfidence % 50} / 50 XP to next Confidence level</div>
+  `;
+
+  depthTrackEl.innerHTML = `
+    <div class="track-header">
+      <div class="track-name">⛩️Depth Track⛩️</div>
+
+    </div>
+    <div class="track-xp">XP: <b>${totalDepth}</b></div>
+    <div class="track-lv">Level: ${depthLevel}</div>
+    <div class="track-bar"><span style="width:${depthPct}%"></span></div>
+    <div class="tiny">${depthPct ? (totalDepth % 50) : 0} / 50 XP to next Depth level</div>
+  `;
+}
+
+function renderDomains(){
+  confDomainsEl.innerHTML = "";
+  depthDomainsEl.innerHTML = "";
+  domPick.innerHTML = "";
+
+  let totalAll = 0;
+  let totalConfidence = 0;
+  let totalDepth = 0;
+
+  DOMAINS.forEach(d => {
+    const xp = STATE.totals[d.key] || 0;
+    totalAll += xp;
+
+    if (CONFIDENCE_DOMAIN_KEYS.includes(d.key)) totalConfidence += xp;
+    else totalDepth += xp;
+
+    const level = calcLevel(xp);
+    const next  = nextLevelAt(xp);
+
+    const levelPct = Math.min(100, Math.round((xp % 20) / 20 * 100));
+    const certPct  = Math.min(100, Math.round((xp / 200) * 100));
+
+    const certHTML = `
+      <div class="tiny">
+        <div style="height:10px;background:#0f1624;border:1px solid var(--border);
+                    border-radius:999px;overflow:hidden;margin-top:4px;">
+          <span style="display:block;height:100%;background:linear-gradient(90deg,#facc15,#fde047,#fef9c3);
+                       width:${certPct}%"></span>
+
+        </div>
+        Certificate: ${Math.min(200, xp)}/200
+      </div>
+    `;
+
+    const card = document.createElement("div");
+    card.className = "domain-card";
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="card-front">
+          <div class="card-content">
+            <div class="dom-emoji">${d.emoji}</div>
+            <div class="dom-main">
+              <div class="dom-title">${d.title}</div>
+              <div class="dom-xp-level">
+                <span class="level">Lv ${level}</span>
+                <span class="xp">${xp} XP</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card-back">
+          <div class="dom-emoji">${d.emoji}</div>
+          <div>
+            <div><b>${d.title}</b></div>
+            <div class="bar-wrap">
+              <div class="bar"><span style="width:${levelPct}%"></span></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+              <div class="bar" style="flex:1"><span style="width:${levelPct}%"></span></div>
+              <span class="tiny" style="min-width:32px;text-align:right;font-weight:600;">Lv ${level}</span>
+            </div>
+            <div class="tiny">${xp} XP • next +${next} to level up</div>
+            ${certHTML}
+          </div>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener("click", () => {
+      card.classList.toggle("flipped");
+    });
+
+    if (CONFIDENCE_DOMAIN_KEYS.includes(d.key)) {
+      confDomainsEl.appendChild(card);
+    } else {
+      depthDomainsEl.appendChild(card);
+    }
+
+    const opt = document.createElement("option");
+    opt.value = d.key;
+    opt.textContent = `${d.emoji} ${d.title}`;
+    domPick.appendChild(opt);
+  });
+
+  // Populate To-Do bonus domain dropdown
+  if (todoBonusSelect) {
+    todoBonusSelect.innerHTML = "";
+    DOMAINS.forEach(d => {
+      const opt2 = document.createElement("option");
+      opt2.value = d.key;
+      opt2.textContent = `${d.emoji} ${d.title}`;
+      todoBonusSelect.appendChild(opt2);
+    });
+  }
+
+  // Header pills
+  const overallEl = document.getElementById("overallXP");
+  const confEl    = document.getElementById("totalConfidence");
+  const depthEl   = document.getElementById("totalDepth");
+
+  if (overallEl) overallEl.textContent = `Σ Overall XP: ${totalAll}`;
+  if (confEl)    confEl.textContent    = `Σ Confidence XP: ${totalConfidence}`;
+  if (depthEl)   depthEl.textContent   = `Σ Depth XP: ${totalDepth}`;
+
+  renderTracksSummary(totalConfidence, totalDepth);
+
+  document.getElementById("level").textContent =
+    `🏅 Overall Lv: ${Math.floor(totalAll / 100) + 1}`;
+
+  renderNpc(); // NPC reacts to updated stats
+}
+
+/********************
+ * FEED & EXPORT
+ ********************/
+function pushFeed(ts, dom, pts, note){
+  STATE.feed.unshift({ts,dom,pts,note});
+  if (STATE.feed.length > 400) STATE.feed.pop();
+  updateLastHint();
+}
+
+function renderFeed(){
+  feedEl.innerHTML = STATE.feed.map(r => {
+    const sign = r.pts > 0 ? "+" : "";
+    return `<div class="it">${r.ts} — <b>${r.dom}</b> ${sign}${r.pts} · ${r.note}</div>`;
+  }).join("");
+}
+
+function updateLastHint(){
+  const r = STATE.feed[0];
+  lastHint.textContent = r
+    ? `Last: ${r.ts} • ${r.dom} ${r.pts>0?"+":""}${r.pts} — ${r.note}`
+    : "";
+}
+
+function renderExport(){
+  const box = document.getElementById("exportTxt");
+  const lines = [...STATE.feed]
+    .reverse()
+    .map(r => `${r.ts}|${r.dom}|${r.pts}|${r.note}`)
+    .join("\n");
+  box.value = lines;
+}
+
+function copy(text){
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text);
+  } else {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+  }
+  const toast=document.getElementById("toast");
+  toast.textContent="Copied";
+  toast.classList.add("show");
+  clearTimeout(window.__t);
+  window.__t=setTimeout(()=>toast.classList.remove("show"),1200);
+}
+function interpretShortcut(rawNote) {
+  if (!rawNote) return null;
+  const first = rawNote.trim().split(/\s+/)[0]; // take the first word
+  const def = SHORTCUTS[first];
+  if (!def) return null;
+
+  return {
+    dom: def.domain,
+    delta: def.delta,
+    note: def.text
+  };
+}
+
+/********************
+ * STREAKS & BONUSES
+ ********************/
+const STREAK_BONUSES = [
+  {day:5,  xp:10},
+  {day:10, xp:15},
+  {day:15, xp:20},
+    {day:20,  xp:25},
+  {day:25, xp:30},
+  {day:30, xp:50},
+];
+
+function renderStreakBonuses(){
+  if (!streakBox) return;
+  const streak = STATE.streak || 0;
+
+  streakBox.innerHTML = STREAK_BONUSES.map(b => {
+    const unlocked = streak >= b.day;
+    const used = STATE.bonusUsed && STATE.bonusUsed[b.day];
+    let label = "";
+    let classes = "mini";
+    let disabled = true;
+
+    if (used) {
+      label = `✅ Used +${b.xp} XP (${b.day}-day streak)`;
+    } else if (unlocked) {
+      label = `Use +${b.xp} XP (${b.day}-day streak)`;
+      classes = "good mini";
+      disabled = false;
+    } else {
+      label = `🔒 +${b.xp} XP at ${b.day}-day streak`;
+    }
+    return `<button class="${classes}" data-bonus-day="${b.day}" ${disabled?"disabled":""}>${label}</button>`;
+  }).join("");
+}
+
+function applyStreakBonus(day){
+  const bonus = STREAK_BONUSES.find(b=>b.day===day);
+  if (!bonus) return;
+  if (STATE.bonusUsed[day]) return;
+  if ((STATE.streak || 0) < day) {
+    alert(`You need a ${day}-day streak to use this bonus.`);
+    return;
+  }
+
+  const dom = domPick.value || DOMAINS[0].key;
+  applyDelta(dom, bonus.xp, `Streak bonus +${bonus.xp} XP for ${day}-day streak`);
+  STATE.bonusUsed[day] = true;
+  save();
+  renderStreakBonuses();
+}
+
+if (streakBox) {
+  streakBox.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-bonus-day]");
+    if (!btn) return;
+    const day = parseInt(btn.getAttribute("data-bonus-day"),10);
+    applyStreakBonus(day);
+  });
+}
+
+// Recompute streak from feed (unique days)
+function recomputeStreakFromFeed(){
+  const dates = new Set(STATE.feed.map(r => r.ts.slice(0,10)));
+  STATE.streak = dates.size;
+  document.getElementById("streak").textContent = `🔥 Streak: ${STATE.streak}`;
+  renderStreakBonuses();
+  renderComboActions();
+  save();
+}
+
+function advanceDay(){
+  STATE.lastDay = todayStr();
+  save();
+  recomputeStreakFromFeed();
+}
+
+/********************
+ * COMBO ACTIONS
+ ********************/
+const COMBOS = [
+  {
+    id:"focus",
+    label:"Focus Combo (Pomodoro × 5 · No distraction · Deep Work)",
+    xp:20
+  },
+  {
+    id:"Vitality",
+    label:"Vitality Combo (7:30 wake · Run · Meditate · Cold shower)",
+    xp:35
+  },
+  {
+    id:"Workout",
+    label:"Workout Combo (Gym membership · First session)",
+    xp:50
+  },
+  {
+    id:"Inspiration",
+    label:"Inspiration Combo (Read all Edgar Allan Poe Poems)",
+    xp:75
+  },
+  {
+    id:"Writer",
+    label:"Writer Combo (Finish writing a story · Print it)",
+    xp:100
+  },
+  {
+    id:"Bravery",
+    label:"Bravery Combo (Start Content Creation in social media)",
+    xp:1000
+  }
+];
+
+const comboBox = document.getElementById("comboActions");
+
+function renderComboActions(){
+  if (!comboBox) return;
+  const today = todayStr();
+  comboBox.innerHTML = COMBOS.map(c => {
+    const last = STATE.comboLastDay[c.id];
+    const done = last === today;
+    if (done) {
+      return `
+        <button class="mini" data-combo="${c.id}" disabled>
+          ✅ ${c.label} (+${c.xp} XP)
+        </button>
+      `;
+    } else {
+      return `
+        <button class="good mini" data-combo="${c.id}">
+          +${c.xp} XP — ${c.label}
+        </button>
+      `;
+    }
+  }).join("");
+}
+
+function applyComboAction(comboId){
+  const today = todayStr();
+  const combo = COMBOS.find(c => c.id === comboId);
+  if (!combo) return;
+
+  const last = STATE.comboLastDay[comboId];
+  if (last === today) {
+    alert("You already claimed this combo today.");
+    return;
+  }
+
+  const dom = domPick.value || DOMAINS[0].key;
+  applyDelta(dom, combo.xp, combo.label);
+  STATE.comboLastDay[comboId] = today;
+  save();
+  renderComboActions();
+}
+
+if (comboBox) {
+  comboBox.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-combo]");
+    if (!btn) return;
+    const id = btn.getAttribute("data-combo");
+    applyComboAction(id);
+  });
+}
+
+/********************
+ * DAILY TO-DO TASKS
+ ********************/
+const TODO_TASKS = [
+  {
+    id:"todo_morning_diary",
+    label:"Finish your morning diary before scrolling your phone",
+    domain:"harmony",
+    xp:5
+  },
+  {
+    id:"todo_pomodoro",
+    label:"Do one 25-minute deep focus block with no distractions",
+    domain:"focus",
+    xp:5
+  },
+  {
+    id:"todo_tpt",
+    label:"Spend 30 minutes creating or improving a TPT / creative project",
+    domain:"wealth",
+    xp:5
+  },
+  {
+    id:"todo_move",
+    label:"Do a 10-minute movement break (stretch, walk, or pushups)",
+    domain:"vitality",
+    xp:5
+  },
+  {
+    id:"todo_checkin",
+    label:"Send one kind check-in message to someone you care about",
+    domain:"empathy",
+    xp:3
+  },
+  {
+    id:"todo_learn",
+    label:"Read a poem in French for 15 min",
+    domain:"wisdom",
+    xp:6
+  },
+  {
+    id:"todo_tidy",
+    label:"Do you meditation with elements",
+    domain:"harmony",
+    xp:7
+  },
+  {
+    id:"todo_posture",
+    label:"Notice and correct your posture intentionally once",
+    domain:"respect",
+    xp:2
+  }
+];
+
+function resetTodoIfNeeded(){
+  const today = todayStr();
+  if (!STATE.todo || STATE.todo.day !== today) {
+    STATE.todo = {
+      day:today,
+      done:{},
+      bonusClaimed:false
+    };
+    save();
+  }
+}
+
+function getDomainMeta(key){
+  return DOMAINS.find(d => d.key === key) || { emoji:"•", title:key };
+}
+
+function updateTodoProgress(){
+  if (!todoProgressEl) return;
+  let doneCount = 0;
+  TODO_TASKS.forEach(t => {
+    if (STATE.todo.done && STATE.todo.done[t.id]) doneCount++;
+  });
+  todoProgressEl.textContent = `${doneCount}/${TODO_TASKS.length} tasks completed`;
+
+  if (!todoClaimBonusEl) return;
+  if (STATE.todo.bonusClaimed) {
+    todoClaimBonusEl.disabled = true;
+    todoClaimBonusEl.textContent = "Bonus claimed";
+  } else {
+    const allDone = doneCount === TODO_TASKS.length;
+    todoClaimBonusEl.disabled = !allDone;
+    todoClaimBonusEl.textContent = "Claim +10 Bonus";
+  }
+}
+
+function handleTodoToggle(task, nowDone, row){
+  resetTodoIfNeeded();
+  if (!STATE.todo.done) STATE.todo.done = {};
+  const wasDone = !!STATE.todo.done[task.id];
+
+  if (nowDone && !wasDone) {
+    STATE.todo.done[task.id] = true;
+    applyDelta(task.domain, task.xp, `[To-Do] ${task.label}`);
+    row.classList.add("done");
+  } else if (!nowDone && wasDone) {
+    STATE.todo.done[task.id] = false;
+    applyDelta(task.domain, -task.xp, `[To-Do undo] ${task.label}`);
+    row.classList.remove("done");
+  }
+  save();
+  updateTodoProgress();
+}
+
+function renderTodo(){
+  if (!todoListEl) return;
+  resetTodoIfNeeded();
+  todoListEl.innerHTML = "";
+
+  TODO_TASKS.forEach(task => {
+    const meta = getDomainMeta(task.domain);
+    const done = !!(STATE.todo.done && STATE.todo.done[task.id]);
+
+    const row = document.createElement("div");
+    row.className = "todo-item" + (done ? " done" : "");
+
+    row.innerHTML = `
+      <input type="checkbox" ${done ? "checked" : ""} data-id="${task.id}">
+      <div>
+        <div class="todo-text">${task.label}</div>
+        <div class="todo-meta">${meta.emoji} ${meta.title} · +${task.xp} XP</div>
+      </div>
+    `;
+
+    const cb = row.querySelector('input[type="checkbox"]');
+    cb.addEventListener("change", (e) => {
+      handleTodoToggle(task, e.target.checked, row);
+    });
+
+    todoListEl.appendChild(row);
+  });
+
+  updateTodoProgress();
+}
+
+/********************
+ * NPC LOGIC
+ ********************/
+function getTotalXpPerDomain(){
+  const totals = {};
+  DOMAINS.forEach(d => {
+    totals[d.key] = STATE.totals[d.key] || 0;
+  });
+  return totals;
+}
+
+function npcComputeLevel(totalXpAll){
+  if (totalXpAll >= 900) return 6;
+  if (totalXpAll >= 500) return 5;
+  if (totalXpAll >= 250) return 4;
+  if (totalXpAll >= 100) return 3;
+  if (totalXpAll >= 40)  return 2;
+  return 1;
+}
+
+function npcFindExtremes(totals){
+  let bestKey=null, bestVal=-Infinity;
+  let worstKey=null, worstVal=Infinity;
+  Object.entries(totals).forEach(([key,xp]) => {
+    if (xp > bestVal){ bestVal=xp; bestKey=key; }
+    if (xp < worstVal){ worstVal=xp; worstKey=key; }
+  });
+  return { bestKey,bestVal,worstKey,worstVal };
+}
+
+function npcTodoStatus(){
+  if (!STATE.todo || !STATE.todo.day) return { allDone:false, bonusClaimed:false };
+  let allDone = true;
+  TODO_TASKS.forEach(t => {
+    if (!STATE.todo.done || !STATE.todo.done[t.id]) allDone=false;
+  });
+  return {
+    allDone,
+    bonusClaimed:!!STATE.todo.bonusClaimed
+  };
+}
+function pickLine(pool) {
+  // simple deterministic “random” using total XP so it shifts as you grow
+  if (!pool || !pool.length) return ["",""];
+  const totalAll = Object.values(getTotalXpPerDomain()).reduce((a,b)=>a+b,0);
+  const idx = totalAll % pool.length;
+  return pool[idx];
+}
+
+function renderNpc(){
+  if (!npcPanel) return;
+
+  const totals = getTotalXpPerDomain();
+  let totalAll = 0;
+  Object.values(totals).forEach(v => totalAll += v);
+
+  const {bestKey,bestVal,worstKey,worstVal} = npcFindExtremes(totals);
+  const bestMeta = bestKey ? getDomainMeta(bestKey) : null;
+  const worstMeta = worstKey ? getDomainMeta(worstKey) : null;
+
+  const level = npcComputeLevel(totalAll);
+  STATE.npc.lastLevel = level;
+
+  let mood = "chill";
+  let moodEmoji = "😐";
+  let mainText = "";
+  let metaText = "";
+
+  const gap = (bestVal - worstVal);
+  const todo = npcTodoStatus();
+
+  const pools = {
+    neutral: [
+      ["Brand new day, brand new run. Let’s place your first XP.",
+       "Start tiny: 1 focus action, 1 movement, 1 kind check-in."],
+      ["Fresh save file. One real-life tap is enough to start.",
+       "Pick any domain and give it a single +1 XP nudge."]
+    ],
+    proud: [
+      ["You’ve built a serious XP base. That’s not luck, that’s repetition.",
+       "Now refine: sharpen one domain instead of chasing everything at once."],
+      ["Nice grind. Your stats are starting to look like a main character’s.",
+       "Pick one domain and push it to the next level on purpose."]
+    ],
+    proud_todo: [
+      ["You cleared every daily quest. That’s real consistency.",
+       "Repeat these kinds of days and your IRL level spikes hard."],
+      ["Daily list: obliterated. That’s exactly how streaks get dangerous (in a good way).",
+       "Lock this pattern in: small checkmarks, every day, no drama."]
+    ],
+    concerned_gap_only: [
+      [() => `You’re stacked in ${bestMeta ? bestMeta.title : "one domain"} but ignoring another.`,
+       "Balance matters. Drop one small action into your weakest area."],
+      [() => `${bestMeta ? bestMeta.title : "One domain"} is carrying the party while another is AFK.`,
+       "Throw your weakest stat a bone: 1 small action, right now."]
+    ],
+    concerned_gap_big: [
+      [() => `Heavy focus on ${bestMeta ? bestMeta.title : "one domain"} while ${worstMeta ? worstMeta.title : "another"} lags.`,
+       "You don’t need perfection, just 1 move to close the gap a bit."],
+      [() => `${bestMeta ? bestMeta.title : "One stat"} is glowing, ${worstMeta ? worstMeta.title : "another"} is in the shadows.`,
+       "Let’s drag the lowest bar up a little today."]
+    ],
+    encouraged: [
+      ["Good stack of XP forming. You’re past the random attempt phase.",
+       "Keep the line smooth: small Discipline + Focus each day beats big bursts."],
+      ["Your graph is starting to look like a habit, not a wish.",
+       "Protect this: a tiny move on bad days so the streak survives."]
+    ],
+    chill: [
+      ["Quiet progress mode. You’re still laying the structure.",
+       "Goal today: one clear action in your strongest domain and one in your weakest."],
+      ["Slow build is still a build. Nothing wrong with low-key days.",
+       "Nudge: +1 in something you’re good at, +1 where you’re behind."]
+    ]
+  };
+
+  if (totalAll === 0) {
+    mood = "neutral";
+    moodEmoji = "😶";
+    [mainText, metaText] = pickLine(pools.neutral);
+  } else if (todo.allDone && todo.bonusClaimed) {
+    mood = "proud";
+    moodEmoji = "😼";
+    [mainText, metaText] = pickLine(pools.proud_todo);
+  } else if (bestVal > 0 && worstVal === 0 && gap > 15) {
+    mood = "concerned";
+    moodEmoji = "🧐";
+    let [m, meta] = pickLine(pools.concerned_gap_only);
+    mainText = typeof m === "function" ? m() : m;
+    metaText = meta;
+  } else if (gap > 25) {
+    mood = "concerned";
+    moodEmoji = "😼‍💼";
+    let [m, meta] = pickLine(pools.concerned_gap_big);
+    mainText = typeof m === "function" ? m() : m;
+    metaText = meta;
+  } else if (totalAll >= 200) {
+    mood = "proud";
+    moodEmoji = "😼✨";
+    [mainText, metaText] = pickLine(pools.proud);
+  } else if (totalAll >= 60) {
+    mood = "encouraged";
+    moodEmoji = "😼👍";
+    [mainText, metaText] = pickLine(pools.encouraged);
+  } else {
+    mood = "chill";
+    moodEmoji = "😼";
+    [mainText, metaText] = pickLine(pools.chill);
+  }
+
+
+  if (npcLevelEl) npcLevelEl.textContent = `Level ${level}`;
+  if (npcMoodEmoji) npcMoodEmoji.textContent = moodEmoji;
+  if (npcMoodLabel) {
+    const labelMap = {
+      proud:"Proud",
+      concerned:"Concerned",
+      encouraged:"Encouraged",
+      chill:"Calm",
+      neutral:"Neutral"
+    };
+    npcMoodLabel.textContent = labelMap[mood] || "Calm";
+  }
+  if (npcMainLine) npcMainLine.textContent = mainText;
+  if (npcMetaLine) npcMetaLine.textContent = metaText;
+
+  if (npcStrongTag) {
+    if (bestMeta) npcStrongTag.textContent = `Strongest: ${bestMeta.emoji} ${bestMeta.title} (${bestVal} XP)`;
+    else npcStrongTag.textContent = "Strongest: —";
+  }
+  if (npcWeakTag) {
+    if (worstMeta) npcWeakTag.textContent = `Weakest: ${worstMeta.emoji} ${worstMeta.title} (${worstVal} XP)`;
+    else npcWeakTag.textContent = "Weakest: —";
+  }
+  if (npcBonusTag) {
+    if (todo.allDone && !todo.bonusClaimed) {
+      npcBonusTag.textContent = "Bonus READY: To-Do bonus (+10 XP) waiting.";
+    } else if (todo.allDone && todo.bonusClaimed) {
+      npcBonusTag.textContent = "Bonus used: full daily clear logged.";
+    } else {
+      npcBonusTag.textContent = "Bonus: Clear To-Do list for +10 XP.";
+    }
+  }
+
+  npcPanel.classList.remove("proud","concerned","encouraged","chill");
+  npcPanel.classList.add(mood);
+}
+
+/********************
+ * APPLY DELTA & UNDO
+ ********************/
+function applyDelta(dom, delta, note){
+  note = note || noteEl.value.trim() || "(no note)";
+  if (!(dom in STATE.totals)) STATE.totals[dom] = 0;
+  STATE.totals[dom] += delta;
+
+  const ts = new Date().toISOString().slice(0,19).replace("T"," ");
+  pushFeed(ts, dom, delta, note);
+  STATE.lastNote = note;
+
+  recomputeStreakFromFeed();
+  save();
+  renderDomains();
+  renderFeed();
+  renderExport();
+}
+
+function undoLast(){
+  if (STATE.feed.length === 0) {
+    alert("No entries to undo.");
+    return;
+  }
+  const last = STATE.feed.shift();
+  if (last && last.dom) {
+    if (!(last.dom in STATE.totals)) STATE.totals[last.dom] = 0;
+    STATE.totals[last.dom] -= last.pts;
+  }
+  recomputeStreakFromFeed();
+  save();
+  renderDomains();
+  renderFeed();
+  renderExport();
+  updateLastHint();
+}
+
+/********************
+ * IMPORT LOG
+ ********************/
+function parseLogText(txt){
+  STATE.feed = [];
+  STATE.totals = Object.fromEntries(DOMAINS.map(d=>[d.key,0]));
+
+  const lines = txt.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  let count = 0;
+  let latestDate = null;
+  const parsed = [];
+
+  lines.forEach(line => {
+    const m = line.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\|(\w+)\|(-?\d+)\|(.*)$/);
+    if (!m) return;
+    const [, ts, dom, ptsStr, note] = m;
+    parsed.push({ ts, dom, pts:parseInt(ptsStr,10), note });
+  });
+
+  parsed.sort((a,b) => a.ts.localeCompare(b.ts));
+
+  parsed.forEach(r => {
+    if (!(r.dom in STATE.totals)) STATE.totals[r.dom] = 0;
+    STATE.totals[r.dom] += r.pts;
+
+    const datePart = r.ts.slice(0,10);
+    if (!latestDate || datePart > latestDate) latestDate = datePart;
+
+    pushFeed(r.ts, r.dom, r.pts, r.note);
+    count++;
+  });
+
+  STATE.lastDay = latestDate || todayStr();
+
+  recomputeStreakFromFeed();
+  save();
+  renderDomains();
+  renderFeed();
+  renderExport();
+
+  alert(`Imported ${count} lines.\nDetected ${STATE.streak} day(s) of activity.`);
+}
+
+/********************
+ * FREE +1 XP ITEMS
+ ********************/
+(function(){
+  const panel = document.getElementById("freeXpPanel");
+  if (!panel) return;
+  panel.addEventListener("click", e => {
+    const item = e.target.closest(".freexp-item");
+    if (!item) return;
+    const dom = item.dataset.domain;
+    if (!dom) return;
+    const note = item.dataset.note || "Free +1 XP instant action";
+    applyDelta(dom, 1, note);
+  });
+})();
+
+/********************
+ * UI WIRING
+ ********************/
+renderDomains();
+renderFeed();
+renderExport();
+updateLastHint();
+renderStreakBonuses();
+renderComboActions();
+advanceDay();
+
+function applyDeltaFromUiDelta(buttonDelta){
+  const rawNote = noteEl.value.trim();
+  const shortcut = interpretShortcut(rawNote);
+
+  if (shortcut) {
+    // Use the shortcut's own domain + XP + message
+    applyDelta(shortcut.dom, shortcut.delta, shortcut.note);
+    noteEl.value = "";
+  } else {
+    // Normal behavior: use selected domain, button delta, and free text note
+    applyDelta(domPick.value, buttonDelta, rawNote || "(no note)");
+    noteEl.value = "";
+  }
+}
+
+document.getElementById("gain1").onclick  = ()=>applyDeltaFromUiDelta( 1);
+document.getElementById("gain2").onclick  = ()=>applyDeltaFromUiDelta( 2);
+document.getElementById("gain5").onclick  = ()=>applyDeltaFromUiDelta( 5);
+document.getElementById("gain10").onclick = ()=>applyDeltaFromUiDelta(10);
+document.getElementById("gain20").onclick = ()=>applyDeltaFromUiDelta(20);
+document.getElementById("gain50").onclick = ()=>applyDeltaFromUiDelta(50);
+
+document.getElementById("lose1").onclick  = ()=>applyDeltaFromUiDelta(-1);
+document.getElementById("lose2").onclick  = ()=>applyDeltaFromUiDelta(-2);
+document.getElementById("lose5").onclick  = ()=>applyDeltaFromUiDelta(-5);
+document.getElementById("lose10").onclick = ()=>applyDeltaFromUiDelta(-10);
+document.getElementById("lose20").onclick = ()=>applyDeltaFromUiDelta(-20);
+document.getElementById("lose50").onclick = ()=>applyDeltaFromUiDelta(-50);
+
+document.getElementById("copyExport").onclick = () =>
+  copy(document.getElementById("exportTxt").value);
+
+document.getElementById("parseLog").onclick = () =>
+  parseLogText(document.getElementById("importTxt").value);
+
+document.getElementById("reset").onclick = () => {
+  const backup = JSON.stringify(STATE);
+  localStorage.setItem(SKEY + "_backup_" + Date.now(), backup);
+  localStorage.removeItem(SKEY);
+  location.reload();
+};
+
+
+/**********************************************
+ *  COMMAND SUGGESTIONS UI (Autocomplete)
+ **********************************************/
+
+// When typing in the note field, show / filter commands
+noteEl.addEventListener("input", () => {
+  const value = noteEl.value.trim();
+
+  // If user typed "/" show all commands
+  if (value === "/") {
+    renderCommandSuggestions("");
+  }
+  // If starts with "/", filter
+  else if (value.startsWith("/")) {
+    const query = value.slice(1).toLowerCase();
+    renderCommandSuggestions(query);
+  }
+  // Otherwise hide
+  else {
+    hideCommandSuggestions();
+  }
+});
+
+// Clicking a suggestion inserts it into the note input
+cmdSuggestionsEl.addEventListener("click", e => {
+  const item = e.target.closest(".cmd-item");
+  if (!item) return;
+  
+  const cmd = item.dataset.cmd;
+  noteEl.value = cmd + " ";
+  noteEl.focus();
+  
+  hideCommandSuggestions();
+});
+
+// Hide list when note loses focus (delay to allow click)
+noteEl.addEventListener("blur", () => {
+  setTimeout(() => hideCommandSuggestions(), 150);
+});
+
+document.getElementById("undoLast").onclick = undoLast;
+
+document.addEventListener("keydown", e => {
+  if (e.key === "z" || e.key === "Z") undoLast();
+});
+
+// Auto-import data.txt if available (for your logs)
+fetch("data.txt")
+  .then(res => res.text())
+  .then(text => {
+    if (text.trim()) {
+      parseLogText(text);
+      console.log("Imported data.txt automatically");
+    }
+  })
+  .catch(err => console.warn("No data.txt found or fetch blocked:", err));
+
+// External charts / pages
+document.getElementById("DomainsChart").onclick = () => {
+  window.open("DomainsChart.html", "_blank");
+};
+document.getElementById("ActionsChart").onclick = () => {
+  window.open("ActionsChart.html", "_blank");
+};
+document.getElementById("Certificates").onclick = () => {
+  window.open("Certificates.html", "_blank");
+};
+
+// To-Do popup handlers
+if (todoOpenBtn && todoOverlay) {
+  todoOpenBtn.addEventListener("click", () => {
+    resetTodoIfNeeded();
+    renderTodo();
+    todoOverlay.classList.add("show");
+  });
+}
+if (todoCloseBtn && todoOverlay) {
+  todoCloseBtn.addEventListener("click", () => {
+    todoOverlay.classList.remove("show");
+  });
+}
+if (todoOverlay) {
+  todoOverlay.addEventListener("click", e => {
+    if (e.target === todoOverlay) {
+      todoOverlay.classList.remove("show");
+    }
+  });
+}
+if (todoClaimBonusEl) {
+  todoClaimBonusEl.addEventListener("click", () => {
+    resetTodoIfNeeded();
+    if (STATE.todo.bonusClaimed) return;
+
+    let allDone = true;
+    TODO_TASKS.forEach(t => {
+      if (!STATE.todo.done || !STATE.todo.done[t.id]) allDone=false;
+    });
+    if (!allDone) return;
+
+    const domain = (todoBonusSelect && todoBonusSelect.value) || domPick.value || DOMAINS[0].key;
+    applyDelta(domain, 10, "[To-Do Bonus] Completed full daily list");
+    STATE.todo.bonusClaimed = true;
+    save();
+    updateTodoProgress();
+    renderNpc();
+  });
+}
+
+
+function resetWaterDayIfNeeded(){
+  const today = todayStr();
+  if (!STATE.water || STATE.water.day !== today){
+    STATE.water = {
+      day: today,
+      small: 0,
+      big: 0
+    };
+    save();
+  }
+}
+
+function getWaterLiters(){
+  resetWaterDayIfNeeded();
+  return STATE.water.small * SMALL_BOTTLE_L +
+         STATE.water.big   * BIG_BOTTLE_L;
+}
+
+function getWaterXp(){
+  resetWaterDayIfNeeded();
+  return STATE.water.small * SMALL_BOTTLE_XP +
+         STATE.water.big   * BIG_BOTTLE_XP;
+}
+
+function renderWaterWidget(){
+  if (!waterLabel || !waterBarFill || !waterXpLabel) return;
+
+  resetWaterDayIfNeeded();
+
+  const totalLRaw = getWaterLitersRaw();
+  const totalL    = Math.min(totalLRaw, WATER_GOAL_L);
+  const xp        = getWaterXp();
+  const pct       = Math.min(100, Math.round((totalL / WATER_GOAL_L) * 100));
+
+  if (totalLRaw >= WATER_GOAL_L){
+    waterLabel.textContent = "💧 Water is maxed today";
+  } else {
+    waterLabel.textContent = `💧 ${totalL.toFixed(2)} / ${WATER_GOAL_L}L`;
+  }
+
+  waterXpLabel.textContent = `${xp} XP`;
+  waterBarFill.style.width = pct + "%";
+}
+
+
+function addWater(kind){
+  resetWaterDayIfNeeded();
+
+  const beforeRaw = getWaterLitersRaw();
+  let xp = 0;
+  let label = "";
+
+  if (kind === "small") {
+    STATE.water.small += 1;
+    xp = SMALL_BOTTLE_XP;
+    label = "Small water bottle (+2 XP)";
+  } else if (kind === "big") {
+    STATE.water.big += 1;
+    xp = BIG_BOTTLE_XP;
+    label = "Big water bottle (+6 XP)";
+  }
+
+  // XP ALWAYS goes to Vitality
+  if (xp > 0) {
+    applyDelta(WATER_DOMAIN_KEY, xp, label);
+  }
+
+  const afterRaw = getWaterLitersRaw();
+
+  // First time hitting / passing 2L today → trigger bonus
+  if (beforeRaw < WATER_GOAL_L &&
+      afterRaw  >= WATER_GOAL_L &&
+      !STATE.water.bonusClaimed) {
+
+    STATE.water.bonusClaimed = true;
+    save();
+    renderWaterWidget();
+    awardWaterGoalBonus();
+    return;
+  }
+
+  save();
+  renderWaterWidget();
+}
+
+function awardWaterGoalBonus(){
+  const bonusXP = 5;
+  const domains = STATE.domains || {};
+  const domainKeys = Object.keys(domains);
+
+  if (!domainKeys.length) return;
+
+  const choice = prompt(
+    `Water goal reached! You earned +${bonusXP} bonus XP.\n\n` +
+    `Type the domain key to receive it:\n` +
+    `${domainKeys.join(", ")}`
+  );
+
+  if (!choice) return;
+
+  const key = choice.trim().toLowerCase();
+  if (!domains[key]) {
+    alert("No such domain. Bonus not applied.");
+    return;
+  }
+
+  applyDelta(key, bonusXP, "Water goal bonus (+5 XP)");
+  save();
+  renderDomains();
+}
+
+if (waterSmallBtn) {
+  waterSmallBtn.addEventListener("click", () => addWater("small"));
+}
+if (waterBigBtn) {
+  waterBigBtn.addEventListener("click", () => addWater("big"));
+}
+if (waterResetBtn) {
+  waterResetBtn.addEventListener("click", resetWaterToday);
+}
+
+function getWaterLitersRaw(){
+  return STATE.water.small * SMALL_BOTTLE_L +
+         STATE.water.big   * BIG_BOTTLE_L;
+}
+
+// For display / bar
+function getWaterLiters(){
+  resetWaterDayIfNeeded();
+  return Math.min(getWaterLitersRaw(), WATER_GOAL_L);
+}
+
+function getWaterXp(){
+  resetWaterDayIfNeeded();
+  return STATE.water.small * SMALL_BOTTLE_XP +
+         STATE.water.big   * BIG_BOTTLE_XP;
+}
+
+renderWaterWidget();
+
+</script>
+</body>
+</html>

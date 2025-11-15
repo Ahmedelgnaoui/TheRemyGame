@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>IRL XP – Domain Progress Charts</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #050816;
+      --panel: #0b1020;
+      --accent: #ffb547;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --border: #1f2933;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020617 55%, #000 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      letter-spacing: 0.04em;
+      margin: 0;
+    }
+
+    header .subtitle {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, #111827, #020617 60%);
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      padding: 16px 18px 18px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      margin: 0 0 8px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .card p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin: 0 0 10px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      font-size: 0.82rem;
+      background: #020617;
+      color: var(--text);
+      outline: none;
+    }
+
+    textarea::placeholder { color: #4b5563; }
+
+    button {
+      margin-top: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, #f97316, #eab308);
+      color: #111827;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.15s ease;
+    }
+
+    button:hover {
+      filter: brightness(1.05);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.7);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(1px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.6);
+    }
+
+    .status {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      white-space: pre-wrap;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      width: 100%;
+      min-height: 320px;
+    }
+
+    .legend {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.78rem;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: #020617;
+      border: 1px solid #111827;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s ease, border-color 0.15s ease,
+        opacity 0.15s ease, transform 0.1s ease;
+    }
+
+    .legend span:hover {
+      transform: translateY(-1px);
+      border-color: #4b5563;
+    }
+
+    .legend span.inactive {
+      opacity: 0.35;
+      border-color: #374151;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #fff;
+    }
+
+    /* PIE SECTION */
+    .pies-section-title {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .pie-card {
+      margin-top: 10px;
+      background: #020617;
+      border-radius: 14px;
+      border: 1px solid #111827;
+      padding: 10px 12px 12px;
+    }
+
+    .pie-card h3 {
+      margin: 0 0 6px;
+      font-size: 0.86rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+    }
+
+    .pie-wrapper {
+      position: relative;
+      width: 100%;
+      min-height: 220px;
+    }
+
+    .pie-meta {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .pie-meta span {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div>
+        <h1>The Remy — Domains Chart</h1>
+        <div class="subtitle">
+          Paste your <strong>Export Activity Log</strong> from the main game to see how each
+          domain evolved over time. Click domains to show / hide them.
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- LEFT: Charts -->
+      <section class="card">
+        <h2>XP Over Time</h2>
+        <p>
+          X-axis = sequence of actions • Y-axis = total XP.
+          Use the chips below the graph to focus on one or more domains.
+        </p>
+        <div class="chart-wrapper">
+          <canvas id="xpChart"></canvas>
+        </div>
+        <div class="legend" id="legend"></div>
+
+        <!-- CONFIDENCE vs DEPTH PIE -->
+        <div class="pies-section-title">XP Distribution</div>
+        <div class="pie-card">
+          <h3>Confidence vs Depth</h3>
+          <div class="pie-wrapper">
+            <canvas id="tracksPie"></canvas>
+          </div>
+          <div class="pie-meta" id="pieMeta"></div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Import box -->
+      <section class="card">
+        <h2>Import Activity Log</h2>
+        <p>
+          From the main Confidence XP page, click <strong>Copy Export</strong>, then paste
+          the text here and hit <strong>Generate Charts</strong>.
+        </p>
+        <textarea
+          id="logInput"
+          placeholder="Example formats the parser understands:
+2025-11-11 23:59:22 — empathy +5 — checked on sister’s wellbeing
+2025-11-11|discipline|+3|studied class notes"
+        ></textarea>
+        <button id="parseButton">Generate Charts</button>
+        <div class="status" id="status"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const DOMAINS = [
+      "respect",
+      "wisdom",
+      "vitality",
+      "wealth",
+      "empathy",
+      "focus",
+      "discipline",
+      "inspiration",
+      "bravery",
+      "harmony",
+    ];
+
+    const CONFIDENCE_DOMAIN_KEYS = ["respect", "vitality", "wealth", "discipline", "bravery"];
+
+    const DOMAIN_LABELS = {
+      respect: "Respect",
+      wisdom: "Wisdom",
+      vitality: "Vitality",
+      wealth: "Wealth",
+      empathy: "Empathy",
+      focus: "Focus",
+      discipline: "Discipline",
+      inspiration: "Inspiration",
+      bravery: "Bravery",
+      harmony: "Harmony",
+    };
+
+    const DOMAIN_COLORS = {
+      respect:     "#FF6B6B",
+      wisdom:      "#4D96FF",
+      vitality:    "#59DFA8",
+      wealth:      "#F9D923",
+      empathy:     "#FF8DC7",
+      focus:       "#3EDBF0",
+      discipline:  "#A889FF",
+      inspiration: "#FFB26B",
+      bravery:     "#FF7F3F",
+      harmony:     "#7CF5A0",
+    };
+
+    let chart;
+    let tracksPie;
+
+    /* ---------- PARSE LOG ---------- */
+
+    function parseLog(raw) {
+      const lines = raw.split(/\r?\n/).map((l) => l.trim());
+      const entries = [];
+
+      for (const line of lines) {
+        if (!line) continue;
+
+        // Format 1: 2025-11-11 23:59:22 — empathy +5 — ...
+        let m = line.match(
+          /^(\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?).*?\b(respect|wisdom|vitality|wealth|empathy|focus|discipline|inspiration|bravery|harmony)\b.*?([+-]\d+)\b/i
+        );
+        if (m) {
+          const [_, dateStr, domainRaw, deltaStr] = m;
+          const domain = domainRaw.toLowerCase();
+          const delta = parseInt(deltaStr, 10);
+          if (!Number.isNaN(delta)) {
+            entries.push({ time: new Date(dateStr), domain, delta });
+            continue;
+          }
+        }
+
+        // Format 2: 2025-11-11|discipline|+3|...
+        const parts = line.split("|");
+        if (parts.length >= 3 && /\d{4}-\d{2}-\d{2}/.test(parts[0])) {
+          const dateStr = parts[0].trim();
+          const domain = parts[1].trim().toLowerCase();
+          const delta = parseInt(parts[2].trim(), 10);
+          if (DOMAINS.includes(domain) && !Number.isNaN(delta)) {
+            entries.push({ time: new Date(dateStr), domain, delta });
+            continue;
+          }
+        }
+      }
+
+      entries.sort((a, b) => a.time - b.time);
+      return entries;
+    }
+
+    function buildSeries(entries) {
+      const cumulative = {};
+      const series = {};
+      DOMAINS.forEach((d) => {
+        cumulative[d] = 0;
+        series[d] = [];
+      });
+
+      let step = 0;
+      for (const entry of entries) {
+        if (!DOMAINS.includes(entry.domain)) continue;
+        step += 1;
+        cumulative[entry.domain] += entry.delta;
+        series[entry.domain].push({ x: step, y: cumulative[entry.domain] });
+      }
+
+      return series;
+    }
+
+    function buildTotals(entries) {
+      const totals = {};
+      DOMAINS.forEach((d) => (totals[d] = 0));
+
+      for (const e of entries) {
+        if (!DOMAINS.includes(e.domain)) continue;
+        totals[e.domain] += e.delta;
+      }
+
+      let confidenceXP = 0;
+      let depthXP = 0;
+
+      for (const d of DOMAINS) {
+        if (CONFIDENCE_DOMAIN_KEYS.includes(d)) {
+          confidenceXP += totals[d];
+        } else {
+          depthXP += totals[d];
+        }
+      }
+
+      const overallXP = confidenceXP + depthXP;
+
+      return { totals, confidenceXP, depthXP, overallXP };
+    }
+
+    /* ---------- LINE CHART ---------- */
+
+    function renderLegend(series) {
+      const legend = document.getElementById("legend");
+      legend.innerHTML = "";
+
+      DOMAINS.forEach((domain) => {
+        if (!series[domain] || series[domain].length === 0) return;
+
+        const item = document.createElement("span");
+        item.dataset.domain = domain;
+
+        const dot = document.createElement("span");
+        dot.className = "legend-dot";
+        dot.style.background = DOMAIN_COLORS[domain] || "#fff";
+        item.appendChild(dot);
+
+        item.appendChild(
+          document.createTextNode(DOMAIN_LABELS[domain] || domain)
+        );
+
+        item.addEventListener("click", () => toggleDomain(domain));
+
+        legend.appendChild(item);
+      });
+    }
+
+    function toggleDomain(domain) {
+      if (!chart) return;
+      const ds = chart.data.datasets.find((d) => d.domain === domain);
+      if (!ds) return;
+
+      ds.hidden = !ds.hidden;
+
+      const legendItem = document.querySelector(
+        `.legend span[data-domain="${domain}"]`
+      );
+      if (legendItem) {
+        legendItem.classList.toggle("inactive", !!ds.hidden);
+      }
+
+      chart.update();
+    }
+
+    function renderChart(series) {
+      const ctx = document.getElementById("xpChart").getContext("2d");
+      if (chart) chart.destroy();
+
+      const datasets = DOMAINS.filter(
+        (d) => series[d] && series[d].length > 0
+      ).map((domain) => ({
+        label: DOMAIN_LABELS[domain] || domain,
+        domain,
+        data: series[domain],
+        borderColor: DOMAIN_COLORS[domain],
+        backgroundColor: DOMAIN_COLORS[domain],
+        fill: false,
+        tension: 0.25,
+        pointRadius: 2,
+        borderWidth: 2.2,
+      }));
+
+      chart = new Chart(ctx, {
+        type: "line",
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                title: (items) =>
+                  `Action #${items[0].parsed.x ?? items[0].dataIndex + 1}`,
+                label: (item) =>
+                  `${item.dataset.label}: ${item.parsed.y} XP`,
+              },
+            },
+          },
+          scales: {
+            x: {
+              type: "linear",
+              title: { display: true, text: "Actions (chronological)" },
+              ticks: { precision: 0 },
+              grid: { color: "rgba(148, 163, 184, 0.1)" },
+            },
+            y: {
+              title: { display: true, text: "Total XP" },
+              beginAtZero: true,
+              grid: { color: "rgba(148, 163, 184, 0.12)" },
+            },
+          },
+        },
+      });
+
+      renderLegend(series);
+    }
+
+    /* ---------- PIE (CONFIDENCE vs DEPTH) ---------- */
+
+    function renderTracksPie(confXP, depthXP) {
+      const ctx = document.getElementById("tracksPie").getContext("2d");
+      const meta = document.getElementById("pieMeta");
+
+      const safeConf = Math.max(confXP, 0);
+      const safeDepth = Math.max(depthXP, 0);
+      const sum = safeConf + safeDepth || 1;
+      const confPct = (safeConf / sum) * 100;
+      const depthPct = (safeDepth / sum) * 100;
+
+      meta.innerHTML =
+        `<span style="color:#f97316;">Confidence: ${safeConf} XP (${confPct.toFixed(1)}%)</span>` +
+        `<span style="color:#3b82f6;">Depth: ${safeDepth} XP (${depthPct.toFixed(1)}%)</span>`;
+
+      if (tracksPie) tracksPie.destroy();
+
+      tracksPie = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: ["Confidence XP", "Depth XP"],
+          datasets: [{
+            data: [safeConf, safeDepth],
+            backgroundColor: ["#f97316", "#3b82f6"],
+            borderWidth: 1,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "55%",
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: { color: "#e5e7eb", boxWidth: 10 },
+            },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => `${ctx.label}: ${ctx.parsed} XP`,
+              },
+            },
+          },
+        },
+      });
+    }
+
+    /* ---------- WIRING ---------- */
+
+    document.getElementById("parseButton").addEventListener("click", () => {
+      const raw = document.getElementById("logInput").value || "";
+      const statusEl = document.getElementById("status");
+
+      if (!raw.trim()) {
+        statusEl.textContent = "Paste your Export Activity Log first.";
+        return;
+      }
+
+      const entries = parseLog(raw);
+
+      if (!entries.length) {
+        statusEl.textContent =
+          "No valid entries found. Make sure you pasted the Export Activity Log exactly.";
+        return;
+      }
+
+      const series = buildSeries(entries);
+      const { confidenceXP, depthXP, overallXP } = buildTotals(entries);
+
+      renderChart(series);
+      renderTracksPie(confidenceXP, depthXP);
+
+      const totalActions = entries.length;
+      const domainsTouched = DOMAINS.filter(
+        (d) => series[d] && series[d].length
+      );
+      statusEl.textContent =
+        `Parsed ${totalActions} actions across ${domainsTouched.length} domains.\n` +
+        `Overall XP: ${overallXP} · Confidence: ${confidenceXP} · Depth: ${depthXP}`;
+    });
+  </script>
+</body>
+</html>
