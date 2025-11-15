@@ -861,7 +861,7 @@
 </head>
 <body>
 <div class="wrap">
-  <header>
+
 <header>
   <h1>The Remy</h1>
   <span class="pill" id="totalConfidence">Σ Confidence XP: 0</span>
@@ -1290,9 +1290,12 @@ if (!STATE.totals) {
 if (!STATE.water) {
   STATE.water = {
     day: todayStr(),  // "YYYY-MM-DD"
-    small: 0,         // number of small bottles today
-    big: 0            // number of big bottles today
+    small: 0,
+    big: 0,
+    bonusClaimed: false
   };
+}
+
   function resetWaterDayIfNeeded(){
   const today = todayStr();
   if (!STATE.water || STATE.water.day !== today){
@@ -1304,7 +1307,7 @@ if (!STATE.water) {
     };
     save();
   }
-}
+
 
 }
 
@@ -2358,22 +2361,11 @@ if (todoClaimBonusEl) {
 }
 
 
-function resetWaterDayIfNeeded(){
-  const today = todayStr();
-  if (!STATE.water || STATE.water.day !== today){
-    STATE.water = {
-      day: today,
-      small: 0,
-      big: 0
-    };
-    save();
-  }
-}
 
+// For display / bar
 function getWaterLiters(){
   resetWaterDayIfNeeded();
-  return STATE.water.small * SMALL_BOTTLE_L +
-         STATE.water.big   * BIG_BOTTLE_L;
+  return Math.min(getWaterLitersRaw(), WATER_GOAL_L);
 }
 
 function getWaterXp(){
@@ -2443,9 +2435,10 @@ function addWater(kind){
   renderWaterWidget();
 }
 
+
 function awardWaterGoalBonus(){
   const bonusXP = 5;
-  const domains = STATE.domains || {};
+  const domains = STATE.totals || {};        // ✅ use totals
   const domainKeys = Object.keys(domains);
 
   if (!domainKeys.length) return;
@@ -2459,7 +2452,7 @@ function awardWaterGoalBonus(){
   if (!choice) return;
 
   const key = choice.trim().toLowerCase();
-  if (!domains[key]) {
+  if (!(key in domains)) {
     alert("No such domain. Bonus not applied.");
     return;
   }
@@ -2468,6 +2461,21 @@ function awardWaterGoalBonus(){
   save();
   renderDomains();
 }
+
+function getWaterLitersRaw(){
+  return STATE.water.small * SMALL_BOTTLE_L +
+         STATE.water.big   * BIG_BOTTLE_L;
+}
+
+function resetWaterToday(){
+  resetWaterDayIfNeeded();
+  STATE.water.small = 0;
+  STATE.water.big   = 0;
+  STATE.water.bonusClaimed = false;
+  save();
+  renderWaterWidget();
+}
+
 
 if (waterSmallBtn) {
   waterSmallBtn.addEventListener("click", () => addWater("small"));
@@ -2479,24 +2487,8 @@ if (waterResetBtn) {
   waterResetBtn.addEventListener("click", resetWaterToday);
 }
 
-function getWaterLitersRaw(){
-  return STATE.water.small * SMALL_BOTTLE_L +
-         STATE.water.big   * BIG_BOTTLE_L;
-}
-
-// For display / bar
-function getWaterLiters(){
-  resetWaterDayIfNeeded();
-  return Math.min(getWaterLitersRaw(), WATER_GOAL_L);
-}
-
-function getWaterXp(){
-  resetWaterDayIfNeeded();
-  return STATE.water.small * SMALL_BOTTLE_XP +
-         STATE.water.big   * BIG_BOTTLE_XP;
-}
-
 renderWaterWidget();
+
 
 </script>
 </body>
